@@ -1,0 +1,308 @@
+# LearnStratum - AI-Generated Autonomous LMS
+> Zero-Cost, Intelligent, Curriculum-First Learning Platform
+
+---
+
+## 1. Project Vision & Core Idea
+
+**LearnStratum** is an intelligent, self-curating Learning Management System (LMS) designed for autodidacts and learners who want structured paths without paywalls. 
+
+Instead of pre-recorded proprietary content, LearnStratum dynamically synthesizes entire courses from open web and video ecosystems:
+1. **Goal & Cadence Input:** The user provides a target topic, daily/weekly time commitment, and baseline experience level.
+2. **AI Curriculum Synthesis:** Gemini produces an interactive, structured course syllabus (modules, lessons, objectives, search keywords).
+3. **Interactive Syllabus Customization:** The user reviews, reorders, adjusts depth, or deletes topics.
+4. **Grounding & Content Harvesting (Anti-Hallucination Pipeline):** YouTube Data API v3 and Jina Reader / Tavily search engines discover verified, high-quality videos and documentation for every lesson node.
+5. **Interactive Mastery Engine:** Automatically generated quizzes with step-by-step reasoning and active-recall flashcards powered by the **SM-2 Spaced Repetition Algorithm**.
+6. **Progress & Retention Analytics:** Real-time visibility into study streaks, retention probability, and syllabus completion.
+
+---
+
+## 2. Zero-Cost Tech Stack Architecture
+
+Every technology chosen below operates within a permanent, generous free tier:
+
+| Layer | Selected Tech | Free Tier Allocation & Role |
+| :--- | :--- | :--- |
+| **Framework** | **Next.js 16 (App Router, React 19, TS)** | High-performance server components, server actions, and API routes. |
+| **UI & Styling** | **Tailwind CSS v4 + shadcn/ui** | Accessible, modular, and developer-friendly UI component library. |
+| **Database & Auth** | **Supabase (PostgreSQL)** | Free tier: 500MB DB, 50,000 monthly active users, Row-Level Security (RLS). |
+| **ORM** | **Prisma / Drizzle ORM** | Type-safe migrations, typed queries, and schema generation. |
+| **AI Intelligence** | **Google Gemini 2.0 / 1.5 Flash** | Via Google AI Studio: Free tier provides 15 RPM, 1M TPM, 1,500 RPD with native JSON Schema output. |
+| **Video Discovery** | **YouTube Data API v3** | 10,000 quota units/day on Google Cloud Console (100 search calls/day, cached in Postgres). |
+| **Web Content Reader** | **Jina Reader API (`r.jina.ai`)** | 100% free open engine to transform any documentation/article URL into clean Markdown. |
+| **Search Engine API** | **Tavily AI / DuckDuckGo** | Tavily offers 1,000 free searches/month tailored for AI retrieval pipelines. |
+| **Icons & Visuals** | **Lucide React** | Lightweight SVG icons for the interface. |
+| **Deployment** | **Vercel** | Free Hobby tier for Next.js continuous deployment, edge functions, and SSL. |
+
+---
+
+## 3. High-Level System Architecture Flow
+
+```
+[User Input: Topic, Level, Time Budget]
+                  │
+                  ▼
+         [Next.js Server Action]
+                  │
+                  ▼
+   [Gemini API (Structured Outputs / JSON)]
+                  │
+                  ▼
+     [Interactive Syllabus Editor] ◄── User tweaks, adds, reorders modules
+                  │
+                  ▼
+           [Confirm Course]
+                  │
+        ┌─────────┴─────────┐
+        ▼                   ▼
+ [YouTube Data API]   [Tavily / Jina Reader]
+ (Finds top videos)   (Extracts top docs/articles)
+        └─────────┬─────────┘
+                  │
+                  ▼
+      [Gemini Flash (Quizzes & Flashcards)]
+                  │
+                  ▼
+        [Supabase PostgreSQL]
+                  │
+                  ▼
+  [Interactive Classroom & Analytics]
+```
+
+---
+
+## 4. Database Schema Specification (Supabase PostgreSQL)
+
+```sql
+-- Users (managed via Supabase Auth + profile table)
+CREATE TABLE profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT,
+    display_name TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Courses
+CREATE TABLE courses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    topic TEXT NOT NULL,
+    difficulty_level TEXT NOT NULL CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
+    weekly_hours_allocated INT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'generating', 'active', 'completed')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Modules (Course Units)
+CREATE TABLE modules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    order_index INT NOT NULL,
+    estimated_minutes INT DEFAULT 60,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Lessons (Within Modules)
+CREATE TABLE lessons (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    module_id UUID REFERENCES modules(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    order_index INT NOT NULL,
+    objectives JSONB DEFAULT '[]'::jsonb,
+    search_queries JSONB DEFAULT '[]'::jsonb,
+    is_completed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Curated Resources (Videos & Articles)
+CREATE TABLE resources (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    lesson_id UUID REFERENCES lessons(id) ON DELETE CASCADE,
+    type TEXT NOT NULL CHECK (type IN ('youtube_video', 'web_article', 'doc_page')),
+    title TEXT NOT NULL,
+    url TEXT NOT NULL,
+    external_id TEXT, -- e.g., YouTube video ID
+    channel_or_author TEXT,
+    duration_seconds INT,
+    summary_markdown TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Flashcards (SM-2 Spaced Repetition)
+CREATE TABLE flashcards (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    lesson_id UUID REFERENCES lessons(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    front TEXT NOT NULL,
+    back TEXT NOT NULL,
+    repetitions INT DEFAULT 0,
+    interval_days INT DEFAULT 1,
+    ease_factor FLOAT DEFAULT 2.5,
+    next_review_at TIMESTAMPTZ DEFAULT NOW(),
+    last_reviewed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Quizzes & Questions
+CREATE TABLE quizzes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    lesson_id UUID REFERENCES lessons(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE quiz_questions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
+    question TEXT NOT NULL,
+    options JSONB NOT NULL, -- Array of strings e.g. ["A", "B", "C", "D"]
+    correct_option_index INT NOT NULL,
+    explanation TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Quiz Submissions
+CREATE TABLE quiz_submissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    score FLOAT NOT NULL,
+    answers JSONB NOT NULL,
+    completed_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+---
+
+## 5. Milestone-Based Implementation Plan
+
+```mermaid
+flowchart TD
+    M1["Milestone 1: Project Setup, Database & Auth (Week 1)"]
+    M2["Milestone 2: AI Outline Generator & Interactive Editor (Week 2)"]
+    M3["Milestone 3: Grounded Content Harvester (YouTube & Web) (Week 3)"]
+    M4["Milestone 4: Interactive Learning Engine (Quizzes & SM-2 Flashcards) (Week 4)"]
+    M5["Milestone 5: Retention Analytics, Polish & Deployment (Week 5)"]
+
+    M1 --> M2 --> M3 --> M4 --> M5
+```
+
+### Milestone 1: Project Setup, Database & Auth (Week 1)
+- [x] Initialize Next.js project with TypeScript, Tailwind CSS, App Router.
+- [ ] Install essential libraries: `lucide-react`, `zod`, `@supabase/ssr`, `@supabase/supabase-js`, `drizzle-orm` / `prisma`.
+- [ ] Configure Supabase project with database schema and Row Level Security (RLS) policies.
+- [ ] Implement Auth flow (Login, Sign-Up, GitHub/Google OAuth, Session Provider).
+- [ ] Create persistent dashboard shell with navigation and theme switcher.
+
+### Milestone 2: AI Outline Generation & Interactive Editor (Week 2)
+- [ ] Integrate `@google/genai` (Gemini 2.0 / 1.5 Flash SDK) with structured JSON schemas using Zod.
+- [ ] Build Course Creation Wizard (`/courses/new`):
+  - Topic input, Difficulty selector (`Beginner`, `Intermediate`, `Advanced`), Weekly hours allocated.
+- [ ] Implement Server Action to prompt Gemini to generate a tailored curriculum matching the student's available hours.
+- [ ] Build the **Interactive Syllabus Editor**:
+  - Drag-and-drop or reorder buttons for modules and lessons.
+  - Inline editing of lesson titles and learning objectives.
+  - "Add Module", "Add Lesson", "Delete Lesson" controls.
+  - Final "Confirm & Build Course" state.
+
+### Milestone 3: Grounded Content Harvester (YouTube & Web) (Week 3)
+- [ ] Setup YouTube Data API v3 client with quota conservation logic:
+  - Cache identical query results in PostgreSQL.
+  - Query parameters: `type=video`, `videoDuration=medium`, `relevanceLanguage=en`.
+- [ ] Integrate Jina Reader (`https://r.jina.ai/<target_url>`) for web documentation extraction.
+- [ ] Build automated resource curation runner that populates `resources` table for each lesson.
+- [ ] Build the **Classroom View (`/courses/[id]/lesson/[lessonId]`)**:
+  - Embedded YouTube Player with clean controls.
+  - Clean markdown reader view for summarized documentation and articles.
+  - Lesson completion checklist.
+
+### Milestone 4: Interactive Learning Engine (Quizzes & SM-2 Flashcards) (Week 4)
+- [ ] Implement automated Quiz Generator:
+  - Prompt Gemini with lesson objectives to create 3–5 multi-choice questions with answer rationale.
+- [ ] Build Quiz Interface:
+  - Instant answer validation, detailed explanation popup, score tracking.
+- [ ] Implement automated Flashcard Generator:
+  - 5 high-yield conceptual flashcards per lesson.
+- [ ] Build Spaced Repetition (SM-2 Algorithm) Study Deck:
+  - Rate recall quality (0 to 5).
+  - Update `interval_days`, `repetitions`, `ease_factor`, and `next_review_at`.
+  - Filter cards due for review on the current day.
+
+### Milestone 5: Retention Analytics, Polish & Deployment (Week 5)
+- [ ] Student Performance Dashboard:
+  - Daily/weekly study streak calendar.
+  - Overall course syllabus completion percentage.
+  - Flashcard retention curve and quiz score history.
+- [ ] Graceful error handling & API rate limit throttling (`@upstash/ratelimit` free tier).
+- [ ] Deploy production build to **Vercel** with custom environment variables.
+- [ ] Smoke tests, verification, and end-to-end user testing.
+
+---
+
+## 6. Spaced Repetition Logic (SM-2 Reference)
+
+When reviewing flashcards, calculate the next review interval using the standard SuperMemo-2 algorithm:
+
+```typescript
+export interface SM2Input {
+  repetition: number;   // previous repetitions count
+  interval: number;     // previous interval in days
+  easeFactor: number;   // default 2.5
+  grade: number;        // user score from 0 (blackout) to 5 (perfect recall)
+}
+
+export interface SM2Output {
+  repetition: number;
+  interval: number;
+  easeFactor: number;
+  nextReviewDate: Date;
+}
+
+export function calculateSM2({ repetition, interval, easeFactor, grade }: SM2Input): SM2Output {
+  let nextRepetition = repetition;
+  let nextInterval = interval;
+  let nextEaseFactor = easeFactor;
+
+  if (grade >= 3) {
+    if (repetition === 0) {
+      nextInterval = 1;
+    } else if (repetition === 1) {
+      nextInterval = 6;
+    } else {
+      nextInterval = Math.round(interval * easeFactor);
+    }
+    nextRepetition += 1;
+  } else {
+    nextRepetition = 0;
+    nextInterval = 1;
+  }
+
+  // Adjust ease factor (minimum limit 1.3)
+  nextEaseFactor = Math.max(
+    1.3,
+    easeFactor + (0.1 - (5 - grade) * (0.08 + (5 - grade) * 0.02))
+  );
+
+  const nextReviewDate = new Date();
+  nextReviewDate.setDate(nextReviewDate.getDate() + nextInterval);
+
+  return {
+    repetition: nextRepetition,
+    interval: nextInterval,
+    easeFactor: Number(nextEaseFactor.toFixed(2)),
+    nextReviewDate,
+  };
+}
+```
+
+---
+
+## 7. Immediate Next Steps (Starting Milestone 1)
+1. Install initial project dependencies (Supabase, Zod, Lucide icons).
+2. Configure `.env.example` with Supabase, Gemini, and YouTube API credentials.
+3. Configure the Supabase client (`src/lib/supabase/client.ts` and `server.ts`).
+4. Build the core layout with dark/light mode and dashboard navigation.
