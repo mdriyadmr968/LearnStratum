@@ -79,8 +79,25 @@ CREATE TABLE profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT,
     display_name TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    avatar_url TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Auto-provision profile trigger
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, display_name)
+  VALUES (new.id, new.email, COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)))
+  ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- Courses
 CREATE TABLE courses (
@@ -115,6 +132,7 @@ CREATE TABLE lessons (
     objectives JSONB DEFAULT '[]'::jsonb,
     search_queries JSONB DEFAULT '[]'::jsonb,
     is_completed BOOLEAN DEFAULT FALSE,
+    completed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -129,7 +147,16 @@ CREATE TABLE resources (
     channel_or_author TEXT,
     duration_seconds INT,
     summary_markdown TEXT,
+    is_completed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- YouTube Search Quota Cache
+CREATE TABLE youtube_search_cache (
+    query_hash TEXT PRIMARY KEY,
+    query_text TEXT NOT NULL,
+    results JSONB NOT NULL,
+    cached_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Flashcards (SM-2 Spaced Repetition)
@@ -174,6 +201,17 @@ CREATE TABLE quiz_submissions (
     answers JSONB NOT NULL,
     completed_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Daily Study Activity Log (Streak & Retention Analytics)
+CREATE TABLE study_activity_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    activity_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    activity_type TEXT NOT NULL CHECK (activity_type IN ('lesson_completed', 'quiz_completed', 'flashcard_reviewed')),
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 ```
 
 ---
@@ -193,21 +231,21 @@ flowchart TD
 
 ### Milestone 1: Project Setup, Database & Auth (Week 1)
 - [x] Initialize Next.js project with TypeScript, Tailwind CSS, App Router.
-- [ ] Install essential libraries: `lucide-react`, `zod`, `@supabase/ssr`, `@supabase/supabase-js`, `drizzle-orm` / `prisma`.
-- [ ] Configure Supabase project with database schema and Row Level Security (RLS) policies.
-- [ ] Implement Auth flow (Login, Sign-Up, GitHub/Google OAuth, Session Provider).
-- [ ] Create persistent dashboard shell with navigation and theme switcher.
+- [x] Install essential libraries: `lucide-react`, `zod`, `@supabase/ssr`, `@supabase/supabase-js`, `clsx`, `tailwind-merge`.
+- [x] Configure Supabase migration script with database schema, automatic user profile trigger, and Row Level Security (RLS) policies.
+- [x] Implement Auth flow (Login, Sign-Up, GitHub/Google OAuth server actions, Auth callback route handler, Middleware session updater).
+- [x] Create persistent dashboard shell with navigation, metric overview, and user profile state.
 
 ### Milestone 2: AI Outline Generation & Interactive Editor (Week 2)
-- [ ] Integrate `@google/genai` (Gemini 2.0 / 1.5 Flash SDK) with structured JSON schemas using Zod.
-- [ ] Build Course Creation Wizard (`/courses/new`):
-  - Topic input, Difficulty selector (`Beginner`, `Intermediate`, `Advanced`), Weekly hours allocated.
-- [ ] Implement Server Action to prompt Gemini to generate a tailored curriculum matching the student's available hours.
-- [ ] Build the **Interactive Syllabus Editor**:
-  - Drag-and-drop or reorder buttons for modules and lessons.
-  - Inline editing of lesson titles and learning objectives.
-  - "Add Module", "Add Lesson", "Delete Lesson" controls.
-  - Final "Confirm & Build Course" state.
+- [x] Integrate `@google/genai` (Gemini 2.5 Flash SDK) with structured JSON schemas using Zod.
+- [x] Build Course Creation Wizard (`/courses/new`):
+  - Topic input, Difficulty selector (`Beginner`, `Intermediate`, `Advanced`), Weekly hours allocated slider.
+- [x] Implement Server Action to prompt Gemini to generate a tailored curriculum matching the student's available hours.
+- [x] Build the **Interactive Syllabus Editor**:
+  - Reorder buttons for modules and lessons.
+  - Inline editing of lesson titles, module titles, and course metadata.
+  - "Add Module", "Add Lesson", "Delete Lesson", "Delete Module" controls.
+  - "Confirm & Build Course" action persisting course, modules, and lessons into Supabase.
 
 ### Milestone 3: Grounded Content Harvester (YouTube & Web) (Week 3)
 - [ ] Setup YouTube Data API v3 client with quota conservation logic:
