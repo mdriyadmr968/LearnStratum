@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { signOut } from '@/app/auth/actions';
 import { BookOpen, PlusCircle, LayoutDashboard, LogOut, User as UserIcon } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export function Navbar() {
   const [user, setUser] = useState<User | null>(null);
@@ -65,6 +66,8 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
+
           {user ? (
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">

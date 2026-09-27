@@ -304,10 +304,10 @@ flowchart TD
 - [ ] Display matched lessons and resources with relevance score
 
 #### Feature 4: Dark / Light Theme Toggle (next-themes)
-- [ ] Install `next-themes` package
-- [ ] Wrap `RootLayout` in `ThemeProvider` with `attribute="class"` and `defaultTheme="system"`
-- [ ] Add `ThemeToggle` button component to `Navbar` (sun/moon icon toggle)
-- [ ] Support `System`, `Light`, and `Dark` modes
+- [x] Install `next-themes` package
+- [x] Wrap `RootLayout` in `ThemeProvider` with `attribute="class"` and `defaultTheme="system"`
+- [x] Add `ThemeToggle` button component to `Navbar` (sun/moon icon toggle)
+- [x] Support `System`, `Light`, and `Dark` modes
 
 #### Feature 5: Public Course Sharing & Forking
 - [ ] Add `is_public` boolean column and `slug` (unique, URL-safe) column to `courses` table
