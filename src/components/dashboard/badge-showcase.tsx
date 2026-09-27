@@ -80,9 +80,17 @@ export function BadgeShowcase({ badges }: BadgeShowcaseProps) {
           </div>
         </div>
 
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-          {badges.filter((b) => b.isUnlocked).length} of {badges.length} Unlocked
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+            {badges.filter((b) => b.isUnlocked).length} of {badges.length} Unlocked
+          </span>
+          <a
+            href="/achievements"
+            className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition"
+          >
+            View all →
+          </a>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
