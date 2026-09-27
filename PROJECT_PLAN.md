@@ -248,15 +248,15 @@ flowchart TD
   - "Confirm & Build Course" action persisting course, modules, and lessons into Supabase.
 
 ### Milestone 3: Grounded Content Harvester (YouTube & Web) (Week 3)
-- [ ] Setup YouTube Data API v3 client with quota conservation logic:
-  - Cache identical query results in PostgreSQL.
+- [x] Setup YouTube Data API v3 client with quota conservation logic:
+  - Cache identical query results in PostgreSQL `youtube_search_cache`.
   - Query parameters: `type=video`, `videoDuration=medium`, `relevanceLanguage=en`.
-- [ ] Integrate Jina Reader (`https://r.jina.ai/<target_url>`) for web documentation extraction.
-- [ ] Build automated resource curation runner that populates `resources` table for each lesson.
-- [ ] Build the **Classroom View (`/courses/[id]/lesson/[lessonId]`)**:
-  - Embedded YouTube Player with clean controls.
-  - Clean markdown reader view for summarized documentation and articles.
-  - Lesson completion checklist.
+- [x] Integrate Tavily AI Search & Jina Reader (`https://r.jina.ai/<target_url>`) for web documentation extraction.
+- [x] Build automated resource curation runner that populates `resources` table for each lesson on-demand.
+- [x] Build the **Classroom View (`/courses/[id]/lesson/[lessonId]`)**:
+  - Embedded YouTube Player with clean controls and multi-video selector.
+  - Clean markdown reader view for summarized documentation and web articles.
+  - Interactive lesson completion checklist & streak activity logging.
 
 ### Milestone 4: Interactive Learning Engine (Quizzes & SM-2 Flashcards) (Week 4)
 - [ ] Implement automated Quiz Generator:
