@@ -48,7 +48,7 @@ export async function updateSession(request: NextRequest) {
   const isProtectedRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/courses');
   const isAuthRoute = pathname === '/auth/login' || pathname === '/auth/sign-up' || pathname === '/auth/forgot-password';
   // Public routes that never require auth
-  const isPublicRoute = pathname.startsWith('/verify') || pathname.startsWith('/explore');
+  const isPublicRoute = pathname.startsWith('/verify') || pathname.startsWith('/explore') || pathname.startsWith('/search');
 
   if (!user && !isPublicRoute && (isProtectedRoute || pathname === '/auth/reset-password')) {
     const url = request.nextUrl.clone();

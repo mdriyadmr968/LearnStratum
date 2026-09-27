@@ -297,11 +297,11 @@ flowchart TD
 - [x] "Add to LinkedIn" share button with pre-filled URL
 
 #### Feature 3: Semantic Vector Search (Supabase pgvector)
-- [ ] Enable `pgvector` extension in Supabase SQL Editor
-- [ ] Add `embedding vector(768)` column to `lessons` and `resources` tables
-- [ ] Generate embeddings via Gemini embedding model when lesson/resource is saved
-- [ ] Build `/search` page with semantic query input
-- [ ] Display matched lessons and resources with relevance score
+- [x] Enable `pgvector` extension in Supabase SQL Editor
+- [x] Add `embedding vector(768)` column to `lessons` and `resources` tables
+- [x] Generate embeddings via Gemini embedding model when lesson/resource is saved
+- [x] Build `/search` page with semantic query input
+- [x] Display matched lessons and resources with relevance score
 
 #### Feature 4: Dark / Light Theme Toggle (next-themes)
 - [x] Install `next-themes` package

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { signOut } from '@/app/auth/actions';
-import { BookOpen, PlusCircle, LayoutDashboard, LogOut, User as UserIcon, Compass } from 'lucide-react';
+import { BookOpen, PlusCircle, LayoutDashboard, LogOut, User as UserIcon, Compass, Search } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -52,6 +52,13 @@ export function Navbar() {
             >
               <Compass className="w-4 h-4" />
               Explore
+            </Link>
+            <Link
+              href="/search"
+              className="flex items-center gap-1.5 text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition"
+            >
+              <Search className="w-4 h-4" />
+              Search
             </Link>
 
             {user && (
