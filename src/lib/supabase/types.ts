@@ -344,6 +344,31 @@ export interface Database {
         };
         Relationships: [];
       };
+      certificates: {
+        Row: {
+          id: string;
+          user_id: string;
+          course_id: string;
+          course_title: string;
+          student_name: string;
+          issued_at: string;
+          verification_hash: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          course_id: string;
+          course_title: string;
+          student_name: string;
+          issued_at?: string;
+          verification_hash: string;
+        };
+        Update: {
+          id?: string;
+          issued_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

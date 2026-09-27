@@ -290,11 +290,11 @@ flowchart TD
 - [x] Rate limit tutor requests (5 queries/minute per user)
 
 #### Feature 2: Verifiable Certificates of Completion
-- [ ] Extend DB schema: add `certificates` table (id, user_id, course_id, issued_at, verification_hash)
-- [ ] Auto-generate certificate when course reaches 100% lesson completion AND all quizzes attempted
-- [ ] Generate verifiable PDF/SVG certificate with user name, course title, completion date, SHA-256 hash
-- [ ] Public verification page (`/verify/[hash]`) for third-party validation
-- [ ] "Add to LinkedIn" share button with pre-filled URL
+- [x] Extend DB schema: add `certificates` table (id, user_id, course_id, issued_at, verification_hash)
+- [x] Auto-generate certificate when course reaches 100% lesson completion AND all quizzes attempted
+- [x] Generate verifiable PDF/SVG certificate with user name, course title, completion date, SHA-256 hash
+- [x] Public verification page (`/verify/[hash]`) for third-party validation
+- [x] "Add to LinkedIn" share button with pre-filled URL
 
 #### Feature 3: Semantic Vector Search (Supabase pgvector)
 - [ ] Enable `pgvector` extension in Supabase SQL Editor

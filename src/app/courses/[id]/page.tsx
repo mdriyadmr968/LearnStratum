@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { Database } from '@/lib/supabase/types';
+import { CertificatePanel } from '@/components/certificate-panel';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -101,6 +102,19 @@ export default async function CourseDetailPage({ params }: PageProps) {
     }
   }
 
+  // Fetch existing certificate (if already issued)
+  const { data: { user } } = await supabase.auth.getUser();
+  let existingCertificate = null;
+  if (user) {
+    const { data: certData } = await supabase
+      .from('certificates')
+      .select('id, verification_hash, issued_at, course_title, student_name')
+      .eq('user_id', user.id)
+      .eq('course_id', courseId)
+      .single();
+    existingCertificate = certData ?? null;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors">
       <Navbar />
@@ -172,6 +186,14 @@ export default async function CourseDetailPage({ params }: PageProps) {
             )}
           </div>
         </div>
+
+        {/* Certificate of Completion Panel */}
+        <CertificatePanel
+          courseId={course.id}
+          courseTitle={course.title}
+          progressPercent={progressPercent}
+          initialCertificate={existingCertificate}
+        />
 
         {/* Modules & Lessons Curriculum Breakdown */}
         <div className="space-y-6">
