@@ -53,8 +53,8 @@ LearnStratum turns any topic into an end-to-end masterclass. It analyzes your sk
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/mdriyadmr968/LearnStratum.git
-cd LearnStratum
+git clone https://github.com/mdriyadmr968/learnstratum.git
+cd learnstratum
 ```
 
 ### 2. Install dependencies
