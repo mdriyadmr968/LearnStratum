@@ -46,12 +46,16 @@ export async function updateSession(request: NextRequest) {
 
   // Protect authenticated routes
   const isProtectedRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/courses');
-  const isAuthRoute = pathname === '/auth/login' || pathname === '/auth/sign-up';
+  const isAuthRoute = pathname === '/auth/login' || pathname === '/auth/sign-up' || pathname === '/auth/forgot-password';
 
-  if (!user && isProtectedRoute) {
+  if (!user && (isProtectedRoute || pathname === '/auth/reset-password')) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
-    url.searchParams.set('redirectTo', pathname);
+    if (pathname === '/auth/reset-password') {
+      url.searchParams.set('error', 'Please use the password reset link sent to your email.');
+    } else {
+      url.searchParams.set('redirectTo', pathname);
+    }
     return NextResponse.redirect(url);
   }
 

@@ -15,6 +15,20 @@ const SignUpSchema = AuthSchema.extend({
   displayName: z.string().min(2, 'Name must be at least 2 characters').optional(),
 });
 
+const ForgotPasswordSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+});
+
+const ResetPasswordSchema = z
+  .object({
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    confirmPassword: z.string().min(6, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
+
 export type AuthState = {
   error?: string;
   success?: string;
@@ -82,6 +96,51 @@ export async function signUp(prevState: AuthState, formData: FormData): Promise<
   return {
     success: 'Registration successful! Check your email to confirm your account.',
   };
+}
+
+export async function requestPasswordReset(prevState: AuthState, formData: FormData): Promise<AuthState> {
+  const email = formData.get('email') as string;
+
+  const validated = ForgotPasswordSchema.safeParse({ email });
+  if (!validated.success) {
+    return { error: validated.error.issues[0].message };
+  }
+
+  const headerList = await headers();
+  const origin = headerList.get('origin') || '';
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/auth/reset-password`,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return {
+    success: 'Password reset link sent! Check your email inbox to proceed.',
+  };
+}
+
+export async function updatePassword(prevState: AuthState, formData: FormData): Promise<AuthState> {
+  const password = formData.get('password') as string;
+  const confirmPassword = formData.get('confirmPassword') as string;
+
+  const validated = ResetPasswordSchema.safeParse({ password, confirmPassword });
+  if (!validated.success) {
+    return { error: validated.error.issues[0].message };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath('/', 'layout');
+  redirect('/dashboard');
 }
 
 export async function signOut() {

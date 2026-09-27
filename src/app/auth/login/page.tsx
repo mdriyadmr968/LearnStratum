@@ -58,6 +58,12 @@ function LoginForm() {
             >
               Password
             </label>
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 transition"
+            >
+              Forgot password?
+            </Link>
           </div>
           <div className="mt-1">
             <input
