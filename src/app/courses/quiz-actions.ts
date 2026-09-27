@@ -6,6 +6,8 @@ import { generateQuiz } from '@/lib/gemini/quiz-generator';
 import { generateFlashcards } from '@/lib/gemini/flashcard-generator';
 import { calculateSM2, GRADE_MAP, type GradeLabel } from '@/lib/sm2';
 import { checkRateLimit } from '@/lib/ratelimit';
+import { deductCredits } from '@/app/credits/actions';
+import { getCachedResponse, setCachedResponse } from '@/lib/ai-cache';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -104,8 +106,29 @@ export async function getOrGenerateQuiz(
     return { quiz: null, error: 'Quiz generation rate limit reached. Please wait a minute.' };
   }
 
-  // 4. Generate quiz via Gemini
-  const generated = await generateQuiz(lesson.title, objectives);
+  // 3b. Check AI response cache
+  const cacheKey = `quiz:${lesson.title}:${objectives.join(',')}`;
+  type GeneratedQuiz = { title: string; questions: Omit<QuizQuestion, 'id'>[] };
+  const cached = await getCachedResponse<GeneratedQuiz>(cacheKey, 'quiz');
+
+  let generated: GeneratedQuiz;
+
+  if (cached.hit && cached.data) {
+    // Cache hit — no credits deducted
+    generated = cached.data;
+  } else {
+    // 3c. Deduct 1 credit before calling Gemini
+    const creditResult = await deductCredits(1, `Quiz generation: ${lesson.title}`);
+    if (!creditResult.success) {
+      return { quiz: null, error: creditResult.error ?? 'Insufficient credits to generate quiz.' };
+    }
+
+    // 4. Generate quiz via Gemini
+    generated = await generateQuiz(lesson.title, objectives);
+
+    // Store in cache (non-blocking)
+    setCachedResponse(cacheKey, 'quiz', generated as unknown as Record<string, unknown>);
+  }
 
   // 4. Persist quiz
   const { data: newQuiz, error: quizError } = await supabase
@@ -231,8 +254,27 @@ export async function getOrGenerateFlashcards(
     return { flashcards: [], error: 'Flashcard generation rate limit reached. Please wait a minute.' };
   }
 
-  // 4. Generate flashcards via Gemini
-  const generated = await generateFlashcards(lesson.title, objectives);
+  // 3b. Check AI response cache
+  const cacheKey = `flashcards:${lesson.title}:${objectives.join(',')}`;
+  const cached = await getCachedResponse<{ front: string; back: string }[]>(cacheKey, 'flashcards');
+
+  let generated: { front: string; back: string }[];
+
+  if (cached.hit && cached.data) {
+    generated = cached.data;
+  } else {
+    // 3c. Deduct 1 credit
+    const creditResult = await deductCredits(1, `Flashcard generation: ${lesson.title}`);
+    if (!creditResult.success) {
+      return { flashcards: [], error: creditResult.error ?? 'Insufficient credits to generate flashcards.' };
+    }
+
+    // 4. Generate flashcards via Gemini
+    generated = await generateFlashcards(lesson.title, objectives);
+
+    // Store in cache
+    setCachedResponse(cacheKey, 'flashcards', generated as unknown as Record<string, unknown>);
+  }
 
   // 4. Persist
   const rows = generated.map((fc) => ({

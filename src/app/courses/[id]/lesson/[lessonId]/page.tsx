@@ -18,7 +18,8 @@ import {
   Video,
   FileText,
   Layers,
-  BrainCircuit
+  BrainCircuit,
+  Zap,
 } from 'lucide-react';
 import { AiTutorDrawer } from '@/components/classroom/ai-tutor-drawer';
 import type { Database } from '@/lib/supabase/types';
@@ -53,6 +54,20 @@ export default async function LessonClassroomPage({ params }: LessonPageProps) {
     notFound();
   }
   const course = courseData as CourseRow;
+
+  // 1b. Fetch User Credits
+  const { data: { user } } = await supabase.auth.getUser();
+  let userCredits = 50;
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('ai_credits')
+      .eq('id', user.id)
+      .single();
+    if (profile) {
+      userCredits = profile.ai_credits ?? 0;
+    }
+  }
 
   // 2. Fetch Current Lesson
   const { data: lessonData, error: lessonError } = await supabase
@@ -205,6 +220,24 @@ export default async function LessonClassroomPage({ params }: LessonPageProps) {
             )}
           </div>
         </div>
+
+        {/* Low Credits Warning Banner */}
+        {userCredits <= 5 && (
+          <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-sm text-amber-800 dark:text-amber-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span>
+                <strong>Low AI Credits ({userCredits}):</strong> Synthesizing quizzes and flashcard decks uses 1 credit each. Top up via bKash, Nagad or Rocket to maintain uninterrupted learning.
+              </span>
+            </div>
+            <Link
+              href="/credits"
+              className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs whitespace-nowrap transition"
+            >
+              Top Up Credits →
+            </Link>
+          </div>
+        )}
 
         {/* Main Classroom Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">

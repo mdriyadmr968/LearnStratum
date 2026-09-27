@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { signOut } from '@/app/auth/actions';
-import { BookOpen, PlusCircle, LayoutDashboard, LogOut, User as UserIcon, Compass, Search, Trophy } from 'lucide-react';
+import { BookOpen, PlusCircle, LayoutDashboard, LogOut, User as UserIcon, Compass, Search, Trophy, Zap } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { XPBadge } from '@/components/gamification/xp-badge';
@@ -13,6 +13,7 @@ import { getRankInfo, type RankInfo } from '@/lib/gamification';
 export function Navbar() {
   const [user, setUser] = useState<User | null>(null);
   const [rankInfo, setRankInfo] = useState<RankInfo | null>(null);
+  const [creditBalance, setCreditBalance] = useState<number | null>(null);
 
   useEffect(() => {
     try {
@@ -23,11 +24,12 @@ export function Navbar() {
           setUser(data.user);
           const { data: profile } = await supabase
             .from('profiles')
-            .select('xp')
+            .select('xp, ai_credits')
             .eq('id', data.user.id)
             .single();
           if (profile) {
             setRankInfo(getRankInfo(profile.xp || 0));
+            setCreditBalance(profile.ai_credits ?? 0);
           }
         }
       };
@@ -39,14 +41,18 @@ export function Navbar() {
         if (session?.user) {
           supabase
             .from('profiles')
-            .select('xp')
+            .select('xp, ai_credits')
             .eq('id', session.user.id)
             .single()
             .then(({ data: profile }) => {
-              if (profile) setRankInfo(getRankInfo(profile.xp || 0));
+              if (profile) {
+                setRankInfo(getRankInfo(profile.xp || 0));
+                setCreditBalance(profile.ai_credits ?? 0);
+              }
             });
         } else {
           setRankInfo(null);
+          setCreditBalance(null);
         }
       });
 
@@ -121,6 +127,20 @@ export function Navbar() {
           {user ? (
             <div className="flex items-center gap-3">
               <XPBadge rankInfo={rankInfo} />
+              {creditBalance !== null && (
+                <Link
+                  href="/credits"
+                  title="AI Credits"
+                  className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition border ${
+                    creditBalance <= 5
+                      ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40'
+                      : 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40'
+                  }`}
+                >
+                  <Zap className="w-3 h-3" />
+                  {creditBalance} cr
+                </Link>
+              )}
               <div className="hidden sm:flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                 <UserIcon className="w-3.5 h-3.5 text-zinc-500" />
                 <span className="max-w-[150px] truncate font-medium">

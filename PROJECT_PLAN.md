@@ -227,8 +227,9 @@ flowchart TD
     M5["Milestone 5: Retention Analytics, Polish & Deployment (Week 5)"]
     M6["Milestone 6: Advanced Intelligence, Community & Customization (Phase 2)"]
     M7["Milestone 7: Gamification & Mastery Progression (Phase 3)"]
+    M8["Milestone 8: Token/Credit System & AI Response Caching (Phase 4)"]
 
-    M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7
+    M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7 --> M8
 ```
 
 ### Milestone 1: Project Setup, Database & Auth (Week 1)
@@ -331,6 +332,28 @@ flowchart TD
 - [x] Automatic badge award triggers (first_lesson, lesson_5, streak_3, streak_7, quiz_master, flashcard_wizard, pioneer, certified, grandmaster)
 - [x] Interactive Badge Showcase component on Dashboard with tier styling and lock states
 - [x] Badge unlock celebration notification (LevelUpModal with gold confetti)
+
+---
+
+### Milestone 8: Token/Credit System & AI Response Caching (Phase 4)
+
+#### Feature 1: Token/Credit Bucket System with Demo Payment
+- [x] Extend DB schema: add `ai_credits` and `plan` columns to `profiles` table; create `credit_transactions` table (id, user_id, amount, method, reference, status, created_at)
+- [x] Seed new users with 50 free starter credits on sign-up (via existing profile trigger)
+- [x] Deduct credits before every AI generation call (lesson content, quiz, flashcards, outline) — block call if balance is 0
+- [x] `/credits` page: show current balance, transaction history, credit package options
+- [x] Demo payment modal supporting bKash, Nagad, and Rocket — collect phone number + transaction ID, mark as pending
+- [x] Admin-style server action to approve demo payments and top-up user credit balance
+- [x] Low-credit warning banner on Course Creation Wizard and Classroom when credits ≤ 5
+- [x] Credits displayed in Navbar next to XP badge
+
+#### Feature 2: AI Response Caching
+- [x] Extend DB schema: create `ai_cache` table (id, prompt_hash, action_type, response_json, hit_count, created_at, expires_at)
+- [x] Implement `src/lib/ai-cache.ts`: SHA-256 hash of normalized prompt, read/write cache helpers
+- [x] Wrap lesson content generation, quiz generation, and flashcard generation with cache layer
+- [x] Cache TTL: 7 days for lesson content, 3 days for quizzes/flashcards
+- [x] Cache hit = 0 credits deducted (reward for popular/repeated topics)
+- [x] Cache stats visible in `/credits` page (hits saved, credits saved)
 
 ---
 

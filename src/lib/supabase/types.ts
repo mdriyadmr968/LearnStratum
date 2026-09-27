@@ -22,6 +22,8 @@ export interface Database {
           avatar_url: string | null;
           xp: number;
           level: number;
+          ai_credits: number;
+          plan: string;
           created_at: string;
           updated_at: string;
         };
@@ -32,6 +34,8 @@ export interface Database {
           avatar_url?: string | null;
           xp?: number;
           level?: number;
+          ai_credits?: number;
+          plan?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -42,6 +46,8 @@ export interface Database {
           avatar_url?: string | null;
           xp?: number;
           level?: number;
+          ai_credits?: number;
+          plan?: string;
           updated_at?: string;
         };
         Relationships: [];
@@ -409,6 +415,58 @@ export interface Database {
           badge_description?: string;
           icon?: string;
           tier?: 'bronze' | 'silver' | 'gold' | 'obsidian';
+        };
+        Relationships: [];
+      };
+      credit_transactions: {
+        Row: {
+          id: string;
+          user_id: string;
+          amount: number;
+          method: string | null;
+          reference: string | null;
+          status: 'pending' | 'approved' | 'rejected' | 'completed';
+          description: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          amount: number;
+          method?: string | null;
+          reference?: string | null;
+          status?: 'pending' | 'approved' | 'rejected' | 'completed';
+          description?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          status?: 'pending' | 'approved' | 'rejected' | 'completed';
+          amount?: number;
+        };
+        Relationships: [];
+      };
+      ai_cache: {
+        Row: {
+          id: string;
+          prompt_hash: string;
+          action_type: string;
+          response_json: Record<string, unknown>;
+          hit_count: number;
+          created_at: string;
+          expires_at: string;
+        };
+        Insert: {
+          id?: string;
+          prompt_hash: string;
+          action_type: string;
+          response_json: Record<string, unknown>;
+          hit_count?: number;
+          created_at?: string;
+          expires_at: string;
+        };
+        Update: {
+          hit_count?: number;
+          expires_at?: string;
         };
         Relationships: [];
       };

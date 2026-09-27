@@ -6,6 +6,8 @@ import { generateCurriculum, type GenerateCurriculumParams } from '@/lib/gemini/
 import { CurriculumSchema, type GeneratedCurriculum } from '@/lib/gemini/curriculum-schema';
 
 import { checkRateLimit } from '@/lib/ratelimit';
+import { deductCredits } from '@/app/credits/actions';
+import { getCachedResponse, setCachedResponse } from '@/lib/ai-cache';
 
 export async function generateCourseOutline(params: GenerateCurriculumParams): Promise<{
   success: boolean;
@@ -25,7 +27,29 @@ export async function generateCourseOutline(params: GenerateCurriculumParams): P
       };
     }
 
+    // 1. Check AI Response Cache
+    const cacheKey = `outline:${params.topic.toLowerCase().trim()}:${params.difficultyLevel}:${params.weeklyHours}`;
+    const cached = await getCachedResponse<GeneratedCurriculum>(cacheKey, 'outline');
+
+    if (cached.hit && cached.data) {
+      return { success: true, curriculum: cached.data };
+    }
+
+    // 2. Deduct credits (3 credits for course outline)
+    const creditResult = await deductCredits(3, `Course outline: ${params.topic}`);
+    if (!creditResult.success) {
+      return {
+        success: false,
+        error: creditResult.error || 'Insufficient credits to generate course outline.',
+      };
+    }
+
+    // 3. Generate via Gemini
     const curriculum = await generateCurriculum(params);
+
+    // 4. Save to cache (non-blocking)
+    setCachedResponse(cacheKey, 'outline', curriculum as unknown as Record<string, unknown>);
+
     return { success: true, curriculum };
   } catch (error: unknown) {
     const err = error as Error;

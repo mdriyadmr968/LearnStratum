@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/navbar';
 import { SyllabusEditor } from '@/components/syllabus-editor';
 import { generateCourseOutline } from '@/app/courses/actions';
+import { getUserCreditBalance } from '@/app/credits/actions';
 import { type GeneratedCurriculum } from '@/lib/gemini/curriculum-schema';
 import {
   Sparkles,
@@ -13,6 +14,7 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
+  Zap,
 } from 'lucide-react';
 
 const SUGGESTED_TOPICS = [
@@ -34,6 +36,11 @@ export default function NewCoursePage() {
   const [generationStep, setGenerationStep] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [curriculum, setCurriculum] = useState<GeneratedCurriculum | null>(null);
+  const [creditBalance, setCreditBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    getUserCreditBalance().then((bal) => setCreditBalance(bal)).catch(() => {});
+  }, []);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,6 +120,23 @@ export default function NewCoursePage() {
                   Specify your target topic and schedule. Gemini will design a progressive syllabus, break it down into modular lessons, and optimize queries for YouTube and web documentation.
                 </p>
               </div>
+
+              {creditBalance !== null && creditBalance <= 5 && (
+                <div className="mt-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-sm text-amber-800 dark:text-amber-200 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span>
+                      <strong>Low AI Credits ({creditBalance}):</strong> Synthesizing a course outline requires 3 credits. Top up via bKash, Nagad or Rocket to continue.
+                    </span>
+                  </div>
+                  <Link
+                    href="/credits"
+                    className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs whitespace-nowrap transition"
+                  >
+                    Top Up Credits →
+                  </Link>
+                </div>
+              )}
 
               {errorMessage && (
                 <div className="mt-6 p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-sm text-red-700 dark:text-red-400 flex items-center gap-3">
