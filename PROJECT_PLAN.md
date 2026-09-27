@@ -259,13 +259,13 @@ flowchart TD
   - Interactive lesson completion checklist & streak activity logging.
 
 ### Milestone 4: Interactive Learning Engine (Quizzes & SM-2 Flashcards) (Week 4)
-- [ ] Implement automated Quiz Generator:
+- [x] Implement automated Quiz Generator:
   - Prompt Gemini with lesson objectives to create 3–5 multi-choice questions with answer rationale.
-- [ ] Build Quiz Interface:
+- [x] Build Quiz Interface:
   - Instant answer validation, detailed explanation popup, score tracking.
-- [ ] Implement automated Flashcard Generator:
+- [x] Implement automated Flashcard Generator:
   - 5 high-yield conceptual flashcards per lesson.
-- [ ] Build Spaced Repetition (SM-2 Algorithm) Study Deck:
+- [x] Build Spaced Repetition (SM-2 Algorithm) Study Deck:
   - Rate recall quality (0 to 5).
   - Update `interval_days`, `repetitions`, `ease_factor`, and `next_review_at`.
   - Filter cards due for review on the current day.

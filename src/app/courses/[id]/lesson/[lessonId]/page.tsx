@@ -6,6 +6,8 @@ import { harvestLessonResources } from '@/lib/harvester/curator';
 import { YouTubePlayer } from '@/components/classroom/youtube-player';
 import { MarkdownReader } from '@/components/classroom/markdown-reader';
 import { CompletionButton } from '@/components/classroom/completion-button';
+import { QuizPanel } from '@/components/classroom/quiz-panel';
+import { FlashcardDeck } from '@/components/classroom/flashcard-deck';
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,9 +16,12 @@ import {
   Circle,
   HelpCircle,
   Video,
-  FileText
+  FileText,
+  Layers,
+  BrainCircuit
 } from 'lucide-react';
 import type { Database } from '@/lib/supabase/types';
+import type { FlashcardRow } from '@/app/courses/quiz-actions';
 
 interface LessonPageProps {
   params: Promise<{ id: string; lessonId: string }>;
@@ -115,6 +120,42 @@ export default async function LessonClassroomPage({ params }: LessonPageProps) {
     (r) => r.type === 'web_article' || r.type === 'doc_page'
   );
 
+  // 5. Check if Quiz already exists
+  const { data: existingQuiz } = await supabase
+    .from('quizzes')
+    .select('id, lesson_id, title, created_at')
+    .eq('lesson_id', lessonId)
+    .single();
+
+  let initialQuiz = null;
+  if (existingQuiz) {
+    const { data: questions } = await supabase
+      .from('quiz_questions')
+      .select('id, question, options, correct_option_index, explanation')
+      .eq('quiz_id', existingQuiz.id)
+      .order('created_at', { ascending: true });
+
+    initialQuiz = {
+      ...existingQuiz,
+      questions: (questions ?? []).map((q) => ({
+        id: q.id,
+        question: q.question,
+        options: q.options as string[],
+        correct_option_index: q.correct_option_index,
+        explanation: q.explanation,
+      })),
+    };
+  }
+
+  // 6. Check if Flashcards already exist
+  const { data: existingFlashcards } = await supabase
+    .from('flashcards')
+    .select('*')
+    .eq('lesson_id', lessonId)
+    .order('created_at', { ascending: true });
+
+  const initialFlashcards = (existingFlashcards ?? []) as FlashcardRow[];
+
   const completedCount = allLessons.filter((l) => l.is_completed).length;
   const progressPercent = allLessons.length > 0 ? Math.round((completedCount / allLessons.length) * 100) : 0;
 
@@ -212,6 +253,36 @@ export default async function LessonClassroomPage({ params }: LessonPageProps) {
               <MarkdownReader articles={articles} />
             </div>
 
+            {/* Interactive Knowledge Quiz Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-amber-500" />
+                <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                  Knowledge Check Quiz
+                </h2>
+              </div>
+              <QuizPanel
+                lessonId={lesson.id}
+                courseId={course.id}
+                initialQuiz={initialQuiz}
+              />
+            </div>
+
+            {/* Spaced Repetition (SM-2) Flashcard Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Layers className="w-5 h-5 text-violet-500" />
+                <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                  Spaced Repetition Flashcards
+                </h2>
+              </div>
+              <FlashcardDeck
+                lessonId={lesson.id}
+                courseId={course.id}
+                initialFlashcards={initialFlashcards}
+              />
+            </div>
+
             {/* Lesson Pagination Footer */}
             <div className="flex items-center justify-between p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm">
               {prevLesson ? (
@@ -238,7 +309,7 @@ export default async function LessonClassroomPage({ params }: LessonPageProps) {
             </div>
           </div>
 
-          {/* Right Column: Syllabus Drawer & Active Recall Preview (1 col) */}
+          {/* Right Column: Syllabus Drawer & Active Recall Status (1 col) */}
           <div className="space-y-6 lg:sticky lg:top-24">
             {/* Progress Card */}
             <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm space-y-3">
@@ -255,6 +326,23 @@ export default async function LessonClassroomPage({ params }: LessonPageProps) {
               <p className="text-[11px] text-zinc-500 text-center">
                 {completedCount} of {allLessons.length} lessons completed
               </p>
+            </div>
+
+            {/* Retention Engine Highlights */}
+            <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm space-y-3">
+              <div className="flex items-center gap-2">
+                <BrainCircuit className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                  Adaptive Retention Engine
+                </span>
+              </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                LearnStratum schedules your reviews using the SuperMemo-2 (SM-2) algorithm. Flashcards are timed to appear right when recall decay begins.
+              </p>
+              <div className="pt-1 flex items-center justify-between text-[11px] text-zinc-400 border-t border-zinc-100 dark:border-zinc-800">
+                <span>Quiz + SM-2 Active</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">Enabled</span>
+              </div>
             </div>
 
             {/* Interactive Syllabus Navigation */}
@@ -301,19 +389,6 @@ export default async function LessonClassroomPage({ params }: LessonPageProps) {
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* Active Recall Engine Preview (Milestone 4 Preview) */}
-            <div className="p-5 rounded-2xl border border-dashed border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/20 space-y-2 text-center">
-              <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mx-auto">
-                <HelpCircle className="w-4 h-4" />
-              </div>
-              <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-                Milestone 4 Engine Preview
-              </h4>
-              <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-normal">
-                AI Quizzes & SM-2 Spaced Repetition Decks for this lesson will activate in Milestone 4!
-              </p>
             </div>
           </div>
         </div>
