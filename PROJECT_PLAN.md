@@ -225,8 +225,9 @@ flowchart TD
     M3["Milestone 3: Grounded Content Harvester (YouTube & Web) (Week 3)"]
     M4["Milestone 4: Interactive Learning Engine (Quizzes & SM-2 Flashcards) (Week 4)"]
     M5["Milestone 5: Retention Analytics, Polish & Deployment (Week 5)"]
+    M6["Milestone 6: Advanced Intelligence, Community & Customization (Phase 2)"]
 
-    M1 --> M2 --> M3 --> M4 --> M5
+    M1 --> M2 --> M3 --> M4 --> M5 --> M6
 ```
 
 ### Milestone 1: Project Setup, Database & Auth (Week 1)
@@ -278,6 +279,42 @@ flowchart TD
 - [x] Graceful error handling & API rate limit throttling (`@upstash/ratelimit` free tier).
 - [x] Deploy production build to **Vercel** with custom environment variables.
 - [x] Smoke tests, verification, and end-to-end user testing.
+
+### Milestone 6: Advanced Intelligence, Community & Customization (Phase 2)
+
+#### Feature 1: Context-Aware AI Sidekick / Tutor in Classroom
+- [ ] Add collapsible AI Tutor drawer to the Classroom view (`/courses/[id]/lesson/[lessonId]`)
+- [ ] Feed current lesson title, objectives, and harvested markdown as Gemini context window
+- [ ] Quick-action buttons: "Explain differently", "Real-world analogy", "Quiz me on this section"
+- [ ] Streaming response display with typing effect
+- [ ] Rate limit tutor requests (5 queries/minute per user)
+
+#### Feature 2: Verifiable Certificates of Completion
+- [ ] Extend DB schema: add `certificates` table (id, user_id, course_id, issued_at, verification_hash)
+- [ ] Auto-generate certificate when course reaches 100% lesson completion AND all quizzes attempted
+- [ ] Generate verifiable PDF/SVG certificate with user name, course title, completion date, SHA-256 hash
+- [ ] Public verification page (`/verify/[hash]`) for third-party validation
+- [ ] "Add to LinkedIn" share button with pre-filled URL
+
+#### Feature 3: Semantic Vector Search (Supabase pgvector)
+- [ ] Enable `pgvector` extension in Supabase SQL Editor
+- [ ] Add `embedding vector(768)` column to `lessons` and `resources` tables
+- [ ] Generate embeddings via Gemini embedding model when lesson/resource is saved
+- [ ] Build `/search` page with semantic query input
+- [ ] Display matched lessons and resources with relevance score
+
+#### Feature 4: Dark / Light Theme Toggle (next-themes)
+- [ ] Install `next-themes` package
+- [ ] Wrap `RootLayout` in `ThemeProvider` with `attribute="class"` and `defaultTheme="system"`
+- [ ] Add `ThemeToggle` button component to `Navbar` (sun/moon icon toggle)
+- [ ] Support `System`, `Light`, and `Dark` modes
+
+#### Feature 5: Public Course Sharing & Forking
+- [ ] Add `is_public` boolean column and `slug` (unique, URL-safe) column to `courses` table
+- [ ] Public course gallery page (`/explore`) listing all public courses
+- [ ] Public course detail view (`/explore/[slug]`) accessible without login
+- [ ] "Fork to My Dashboard" button that deep-copies course + modules + lessons to the logged-in user's account
+- [ ] Toggle visibility control on course settings page
 
 ---
 
