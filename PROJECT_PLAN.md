@@ -283,11 +283,11 @@ flowchart TD
 ### Milestone 6: Advanced Intelligence, Community & Customization (Phase 2)
 
 #### Feature 1: Context-Aware AI Sidekick / Tutor in Classroom
-- [ ] Add collapsible AI Tutor drawer to the Classroom view (`/courses/[id]/lesson/[lessonId]`)
-- [ ] Feed current lesson title, objectives, and harvested markdown as Gemini context window
-- [ ] Quick-action buttons: "Explain differently", "Real-world analogy", "Quiz me on this section"
-- [ ] Streaming response display with typing effect
-- [ ] Rate limit tutor requests (5 queries/minute per user)
+- [x] Add collapsible AI Tutor drawer to the Classroom view (`/courses/[id]/lesson/[lessonId]`)
+- [x] Feed current lesson title, objectives, and harvested markdown as Gemini context window
+- [x] Quick-action buttons: "Explain differently", "Real-world analogy", "Quiz me on this section"
+- [x] Streaming response display with typing effect
+- [x] Rate limit tutor requests (5 queries/minute per user)
 
 #### Feature 2: Verifiable Certificates of Completion
 - [ ] Extend DB schema: add `certificates` table (id, user_id, course_id, issued_at, verification_hash)

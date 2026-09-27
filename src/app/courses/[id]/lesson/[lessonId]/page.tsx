@@ -20,6 +20,7 @@ import {
   Layers,
   BrainCircuit
 } from 'lucide-react';
+import { AiTutorDrawer } from '@/components/classroom/ai-tutor-drawer';
 import type { Database } from '@/lib/supabase/types';
 import type { FlashcardRow } from '@/app/courses/quiz-actions';
 
@@ -158,6 +159,18 @@ export default async function LessonClassroomPage({ params }: LessonPageProps) {
 
   const completedCount = allLessons.filter((l) => l.is_completed).length;
   const progressPercent = allLessons.length > 0 ? Math.round((completedCount / allLessons.length) * 100) : 0;
+
+  // 7. Build markdown context for AI Tutor (first 3 articles, capped at 4 000 chars)
+  const tutorMarkdownContext = articles
+    .slice(0, 3)
+    .map((a) => `### ${a.title}\n${a.summary_markdown ?? ''}`)
+    .join('\n\n')
+    .slice(0, 4_000);
+
+  const tutorObjectives = Array.isArray(lesson.objectives)
+    ? (lesson.objectives as unknown as string[])
+    : [];
+
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors">
@@ -393,6 +406,13 @@ export default async function LessonClassroomPage({ params }: LessonPageProps) {
           </div>
         </div>
       </main>
+
+      {/* ── AI Sidekick / Tutor ── Floating overlay, context-loaded with lesson data */}
+      <AiTutorDrawer
+        lessonTitle={lesson.title}
+        objectives={tutorObjectives}
+        markdownContext={tutorMarkdownContext}
+      />
     </div>
   );
 }
