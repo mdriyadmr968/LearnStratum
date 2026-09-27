@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { generateQuiz } from '@/lib/gemini/quiz-generator';
 import { generateFlashcards } from '@/lib/gemini/flashcard-generator';
 import { calculateSM2, GRADE_MAP, type GradeLabel } from '@/lib/sm2';
+import { checkRateLimit } from '@/lib/ratelimit';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -97,7 +98,13 @@ export async function getOrGenerateQuiz(
     ? (lesson.objectives as unknown as string[])
     : [];
 
-  // 3. Generate quiz via Gemini
+  // 3. Check rate limit
+  const rateLimit = await checkRateLimit(`quiz_${user.id}`, 10, 60_000);
+  if (!rateLimit.success) {
+    return { quiz: null, error: 'Quiz generation rate limit reached. Please wait a minute.' };
+  }
+
+  // 4. Generate quiz via Gemini
   const generated = await generateQuiz(lesson.title, objectives);
 
   // 4. Persist quiz
@@ -218,7 +225,13 @@ export async function getOrGenerateFlashcards(
     ? (lesson.objectives as unknown as string[])
     : [];
 
-  // 3. Generate flashcards via Gemini
+  // 3. Check rate limit
+  const rateLimit = await checkRateLimit(`flashcards_${user.id}`, 10, 60_000);
+  if (!rateLimit.success) {
+    return { flashcards: [], error: 'Flashcard generation rate limit reached. Please wait a minute.' };
+  }
+
+  // 4. Generate flashcards via Gemini
   const generated = await generateFlashcards(lesson.title, objectives);
 
   // 4. Persist

@@ -271,13 +271,13 @@ flowchart TD
   - Filter cards due for review on the current day.
 
 ### Milestone 5: Retention Analytics, Polish & Deployment (Week 5)
-- [ ] Student Performance Dashboard:
+- [x] Student Performance Dashboard:
   - Daily/weekly study streak calendar.
   - Overall course syllabus completion percentage.
   - Flashcard retention curve and quiz score history.
-- [ ] Graceful error handling & API rate limit throttling (`@upstash/ratelimit` free tier).
-- [ ] Deploy production build to **Vercel** with custom environment variables.
-- [ ] Smoke tests, verification, and end-to-end user testing.
+- [x] Graceful error handling & API rate limit throttling (`@upstash/ratelimit` free tier).
+- [x] Deploy production build to **Vercel** with custom environment variables.
+- [x] Smoke tests, verification, and end-to-end user testing.
 
 ---
 

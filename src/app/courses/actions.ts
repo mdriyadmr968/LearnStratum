@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server';
 import { generateCurriculum, type GenerateCurriculumParams } from '@/lib/gemini/client';
 import { CurriculumSchema, type GeneratedCurriculum } from '@/lib/gemini/curriculum-schema';
 
+import { checkRateLimit } from '@/lib/ratelimit';
+
 export async function generateCourseOutline(params: GenerateCurriculumParams): Promise<{
   success: boolean;
   curriculum?: GeneratedCurriculum;
@@ -13,6 +15,14 @@ export async function generateCourseOutline(params: GenerateCurriculumParams): P
   try {
     if (!params.topic || params.topic.trim().length < 2) {
       return { success: false, error: 'Please enter a valid topic to learn.' };
+    }
+
+    const rateLimit = await checkRateLimit(`gen_outline_${params.topic.toLowerCase().trim()}`, 5, 60_000);
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: 'Rate limit reached: Please wait 60 seconds before synthesizing another course.',
+      };
     }
 
     const curriculum = await generateCurriculum(params);
