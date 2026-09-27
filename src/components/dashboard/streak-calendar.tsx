@@ -29,8 +29,8 @@ export function StreakCalendar({ currentStreakDays, activityDays }: StreakCalend
     <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-orange-50 dark:bg-orange-950/60 flex items-center justify-center text-orange-600 dark:text-orange-400">
-            <Flame className="w-5 h-5 fill-orange-500/20 text-orange-500" />
+          <div className={`w-9 h-9 rounded-xl bg-orange-50 dark:bg-orange-950/60 flex items-center justify-center text-orange-600 dark:text-orange-400 ${currentStreakDays > 0 ? 'animate-flame-pulse' : ''}`}>
+            <Flame className={`w-5 h-5 ${currentStreakDays > 0 ? 'fill-orange-500 text-orange-500' : 'fill-orange-500/20 text-orange-500'}`} />
           </div>
           <div>
             <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">

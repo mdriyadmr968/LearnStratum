@@ -122,29 +122,97 @@ export default function NewCoursePage() {
               )}
 
               {isGenerating ? (
-                /* Animated Generation State */
-                <div className="py-16 text-center space-y-6 max-w-md mx-auto">
-                  <div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mx-auto animate-pulse">
-                    <Loader2 className="w-8 h-8 animate-spin" />
+                /* Animated AI Synthesis State */
+                <div className="py-12 text-center space-y-8 max-w-lg mx-auto animate-in fade-in duration-300">
+                  {/* Glowing AI Multi-Color Orb */}
+                  <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-indigo-500 via-violet-500 to-cyan-400 opacity-70 blur-2xl animate-ai-orb" />
+                    <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-900 border-2 border-white/20 shadow-2xl flex items-center justify-center text-white">
+                      <Sparkles className="w-10 h-10 animate-pulse text-indigo-200" />
+                    </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight">
                       Synthesizing Your Curriculum...
                     </h3>
-                    <p className="mt-1 text-xs text-zinc-500">
-                      {generationStep === 1 && 'Analyzing pedagogical scope and prerequisites...'}
-                      {generationStep === 2 && 'Structuring progressive modules and time budgets...'}
-                      {generationStep >= 3 && 'Formulating lesson mastery objectives & search queries...'}
+                    <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+                      Gemini 2.5 Flash is analyzing pedagogical scope, difficulty constraints, and weekly budgets.
                     </p>
                   </div>
 
-                  <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                  {/* 4-Step Animated Pipeline Stepper */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-left">
                     <div
-                      className="bg-indigo-600 h-1.5 rounded-full transition-all duration-700"
+                      className={`p-3 rounded-2xl border transition-all duration-300 ${
+                        generationStep > 1
+                          ? 'border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-300'
+                          : generationStep === 1
+                          ? 'border-indigo-500 bg-indigo-50/80 dark:bg-indigo-950/50 text-indigo-900 dark:text-indigo-200 ring-2 ring-indigo-500/20 shadow-sm'
+                          : 'border-zinc-200/60 dark:border-zinc-800 opacity-40 text-zinc-400'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        {generationStep > 1 ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        ) : generationStep === 1 ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-indigo-600 shrink-0" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full border border-zinc-400" />
+                        )}
+                        <span className="text-xs font-bold">1. Scope</span>
+                      </div>
+                      <p className="text-[11px] leading-tight opacity-80">Prerequisites & pacing</p>
+                    </div>
+
+                    <div
+                      className={`p-3 rounded-2xl border transition-all duration-300 ${
+                        generationStep > 2
+                          ? 'border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-300'
+                          : generationStep === 2
+                          ? 'border-indigo-500 bg-indigo-50/80 dark:bg-indigo-950/50 text-indigo-900 dark:text-indigo-200 ring-2 ring-indigo-500/20 shadow-sm'
+                          : 'border-zinc-200/60 dark:border-zinc-800 opacity-40 text-zinc-400'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        {generationStep > 2 ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        ) : generationStep === 2 ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-indigo-600 shrink-0" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full border border-zinc-400" />
+                        )}
+                        <span className="text-xs font-bold">2. Modules</span>
+                      </div>
+                      <p className="text-[11px] leading-tight opacity-80">Structure & progression</p>
+                    </div>
+
+                    <div
+                      className={`p-3 rounded-2xl border transition-all duration-300 ${
+                        generationStep >= 3
+                          ? 'border-indigo-500 bg-indigo-50/80 dark:bg-indigo-950/50 text-indigo-900 dark:text-indigo-200 ring-2 ring-indigo-500/20 shadow-sm'
+                          : 'border-zinc-200/60 dark:border-zinc-800 opacity-40 text-zinc-400'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        {generationStep >= 3 ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-indigo-600 shrink-0" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full border border-zinc-400" />
+                        )}
+                        <span className="text-xs font-bold">3. Objectives</span>
+                      </div>
+                      <p className="text-[11px] leading-tight opacity-80">Search & mastery prompts</p>
+                    </div>
+                  </div>
+
+                  {/* Smooth Progress Bar */}
+                  <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-2 overflow-hidden shadow-inner">
+                    <div
+                      className="bg-gradient-to-r from-indigo-600 to-violet-600 h-2 rounded-full transition-all duration-700 ease-out"
                       style={{
                         width:
-                          generationStep === 1 ? '35%' : generationStep === 2 ? '70%' : '90%',
+                          generationStep === 1 ? '35%' : generationStep === 2 ? '70%' : '92%',
                       }}
                     />
                   </div>
