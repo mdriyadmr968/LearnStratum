@@ -17,6 +17,8 @@ import {
 } from '@/app/courses/quiz-actions';
 import { type GradeLabel } from '@/lib/sm2';
 import { triggerConfetti } from '@/lib/celebration';
+import { awardUserXP, checkAndAwardBadge } from '@/app/gamification/actions';
+import { LevelUpModal } from '@/components/gamification/level-up-modal';
 
 interface FlashcardDeckProps {
   lessonId: string;
@@ -39,6 +41,7 @@ export function FlashcardDeck({
   const [reviewedCount, setReviewedCount] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [levelUpData, setLevelUpData] = useState<{ level: number; title: string } | null>(null);
 
   const handleLoadFlashcards = async () => {
     setLoading(true);
@@ -84,6 +87,13 @@ export function FlashcardDeck({
       } else {
         setIsCompleted(true);
         triggerConfetti();
+        // Award XP and check badge
+        awardUserXP(25, 'flashcard_review').then((result) => {
+          if (result.leveledUp) {
+            setLevelUpData({ level: result.level, title: result.rankTitle });
+          }
+        });
+        checkAndAwardBadge('flashcard_wizard');
       }
     });
   };
@@ -312,6 +322,15 @@ export function FlashcardDeck({
           </button>
         </div>
       </div>
+
+      {levelUpData && (
+        <LevelUpModal
+          isOpen={!!levelUpData}
+          onClose={() => setLevelUpData(null)}
+          newLevel={levelUpData.level}
+          newRankTitle={levelUpData.title}
+        />
+      )}
     </div>
   );
 }

@@ -19,6 +19,8 @@ import {
   type QuizWithQuestions
 } from '@/app/courses/quiz-actions';
 import { triggerConfetti } from '@/lib/celebration';
+import { awardUserXP, checkAndAwardBadge } from '@/app/gamification/actions';
+import { LevelUpModal } from '@/components/gamification/level-up-modal';
 
 interface QuizPanelProps {
   lessonId: string;
@@ -39,6 +41,7 @@ export function QuizPanel({ lessonId, courseId, initialQuiz = null }: QuizPanelP
   const [finalScore, setFinalScore] = useState<number | null>(null);
   const [justAnsweredIndex, setJustAnsweredIndex] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [levelUpData, setLevelUpData] = useState<{ level: number; title: string } | null>(null);
 
   // Load quiz on demand if not pre-loaded
   const handleLoadQuiz = async () => {
@@ -98,6 +101,15 @@ export function QuizPanel({ lessonId, courseId, initialQuiz = null }: QuizPanelP
       // Trigger confetti celebration on passing score
       if (res.score >= 70) {
         triggerConfetti();
+        const xpAmount = res.score === 100 ? 40 : 30;
+        awardUserXP(xpAmount, 'quiz_passed').then((result) => {
+          if (result.leveledUp) {
+            setLevelUpData({ level: result.level, title: result.rankTitle });
+          }
+        });
+        if (res.score === 100) {
+          checkAndAwardBadge('quiz_master');
+        }
       }
     });
   };
@@ -370,6 +382,15 @@ export function QuizPanel({ lessonId, courseId, initialQuiz = null }: QuizPanelP
             )}
           </button>
         </div>
+      )}
+
+      {levelUpData && (
+        <LevelUpModal
+          isOpen={!!levelUpData}
+          onClose={() => setLevelUpData(null)}
+          newLevel={levelUpData.level}
+          newRankTitle={levelUpData.title}
+        />
       )}
     </div>
   );

@@ -5,6 +5,9 @@ import { toggleLessonCompletion } from '@/app/courses/lesson-actions';
 import { CheckCircle2, Circle, Loader2 } from 'lucide-react';
 import { triggerGoldCelebration } from '@/lib/celebration';
 
+import { awardUserXP, checkAndAwardBadge } from '@/app/gamification/actions';
+import { LevelUpModal } from '@/components/gamification/level-up-modal';
+
 interface CompletionButtonProps {
   lessonId: string;
   courseId: string;
@@ -18,6 +21,7 @@ export function CompletionButton({
 }: CompletionButtonProps) {
   const [isCompleted, setIsCompleted] = useState(initialCompleted);
   const [isPending, setIsPending] = useState(false);
+  const [levelUpData, setLevelUpData] = useState<{ level: number; title: string } | null>(null);
 
   const handleToggle = async () => {
     const nextState = !isCompleted;
@@ -26,6 +30,13 @@ export function CompletionButton({
 
     if (nextState) {
       triggerGoldCelebration();
+      // Award +50 XP and check badges
+      awardUserXP(50, 'lesson_completed').then((result) => {
+        if (result.leveledUp) {
+          setLevelUpData({ level: result.level, title: result.rankTitle });
+        }
+      });
+      checkAndAwardBadge('first_lesson');
     }
 
     const res = await toggleLessonCompletion(lessonId, courseId, nextState);
@@ -37,24 +48,35 @@ export function CompletionButton({
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleToggle}
-      disabled={isPending}
-      className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all duration-200 shadow-sm active:scale-95 ${
-        isCompleted
-          ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20'
-          : 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200'
-      }`}
-    >
-      {isPending ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
-      ) : isCompleted ? (
-        <CheckCircle2 className="w-4 h-4 text-white animate-check-pop" />
-      ) : (
-        <Circle className="w-4 h-4 text-zinc-400" />
+    <>
+      <button
+        type="button"
+        onClick={handleToggle}
+        disabled={isPending}
+        className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all duration-200 shadow-sm active:scale-95 ${
+          isCompleted
+            ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20'
+            : 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200'
+        }`}
+      >
+        {isPending ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : isCompleted ? (
+          <CheckCircle2 className="w-4 h-4 text-white animate-check-pop" />
+        ) : (
+          <Circle className="w-4 h-4 text-zinc-400" />
+        )}
+        <span>{isCompleted ? 'Completed' : 'Mark as Complete'}</span>
+      </button>
+
+      {levelUpData && (
+        <LevelUpModal
+          isOpen={!!levelUpData}
+          onClose={() => setLevelUpData(null)}
+          newLevel={levelUpData.level}
+          newRankTitle={levelUpData.title}
+        />
       )}
-      <span>{isCompleted ? 'Completed' : 'Mark as Complete'}</span>
-    </button>
+    </>
   );
 }

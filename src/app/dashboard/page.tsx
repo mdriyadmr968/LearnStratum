@@ -14,6 +14,10 @@ import {
 import { StreakCalendar } from '@/components/dashboard/streak-calendar';
 import { RetentionChart } from '@/components/dashboard/retention-chart';
 import { RecentActivityTimeline, type ActivityItem } from '@/components/dashboard/recent-activity';
+import { GamificationCard } from '@/components/dashboard/gamification-card';
+import { BadgeShowcase } from '@/components/dashboard/badge-showcase';
+import { getUserGamificationState, type UserGamificationState } from '@/app/gamification/actions';
+import { getRankInfo, ALL_BADGES } from '@/lib/gamification';
 import type { Database } from '@/lib/supabase/types';
 
 type CourseRow = Database['public']['Tables']['courses']['Row'];
@@ -50,6 +54,12 @@ export default async function DashboardPage() {
 
   let activityDays: { date: string; count: number; hasActivity: boolean }[] = [];
   let recentActivities: ActivityItem[] = [];
+  let gamificationState: UserGamificationState = {
+    rankInfo: getRankInfo(0),
+    badges: ALL_BADGES.map((b) => ({ ...b, isUnlocked: false, unlockedAt: null })),
+    unlockedCount: 0,
+    totalCount: ALL_BADGES.length,
+  };
 
   try {
     const supabase = await createClient();
@@ -57,6 +67,10 @@ export default async function DashboardPage() {
     user = userData.user;
 
     if (user) {
+      const gState = await getUserGamificationState();
+      if (gState) {
+        gamificationState = gState;
+      }
       // 1. Fetch Courses
       const { data: coursesData } = await supabase
         .from('courses')
@@ -251,6 +265,13 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      {/* Stratum Level & XP Progression Card */}
+      <GamificationCard
+        rankInfo={gamificationState.rankInfo}
+        unlockedBadgeCount={gamificationState.unlockedCount}
+        totalBadgeCount={gamificationState.totalCount}
+      />
+
       {/* Quick Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm flex items-center gap-4">
@@ -321,6 +342,9 @@ export default async function DashboardPage() {
         retention={retention}
         quizStats={quizStats}
       />
+
+      {/* Mastery Badges & Trophies Showcase */}
+      <BadgeShowcase badges={gamificationState.badges} />
 
       {/* Recent Activity Timeline & Courses Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">

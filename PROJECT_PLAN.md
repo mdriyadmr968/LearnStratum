@@ -226,8 +226,9 @@ flowchart TD
     M4["Milestone 4: Interactive Learning Engine (Quizzes & SM-2 Flashcards) (Week 4)"]
     M5["Milestone 5: Retention Analytics, Polish & Deployment (Week 5)"]
     M6["Milestone 6: Advanced Intelligence, Community & Customization (Phase 2)"]
+    M7["Milestone 7: Gamification & Mastery Progression (Phase 3)"]
 
-    M1 --> M2 --> M3 --> M4 --> M5 --> M6
+    M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7
 ```
 
 ### Milestone 1: Project Setup, Database & Auth (Week 1)
@@ -315,6 +316,21 @@ flowchart TD
 - [x] Public course detail view (`/explore/[slug]`) accessible without login
 - [x] "Fork to My Dashboard" button that deep-copies course + modules + lessons to the logged-in user's account
 - [x] Toggle visibility control on course settings page
+
+### Milestone 7: Gamification & Mastery Progression (Phase 3)
+
+#### Feature 1: "Stratum Levels" & XP System (Progression Loop)
+- [x] Extend DB schema: add `xp` and `level` columns to `profiles` table
+- [x] Define Stratum Level tiers (Novice Explorer, Knowledge Seeker, Stratum Scholar, Deep Thinker, Stratum Grandmaster)
+- [x] Award XP on key learning actions: Lesson complete (+50 XP), Quiz passing (+30 XP), Flashcard deck review (+25 XP), Certificate issued (+100 XP), Course shared (+50 XP)
+- [x] Level-up modal & visual celebration when crossing tier thresholds
+- [x] Level & XP progress bar badge integrated into Navbar and Dashboard
+
+#### Feature 2: Unlockable Mastery Badges & Trophies
+- [x] Extend DB schema: add `user_badges` table (id, user_id, badge_key, badge_name, badge_description, icon, tier, unlocked_at)
+- [x] Automatic badge award triggers (first_lesson, lesson_5, streak_3, streak_7, quiz_master, flashcard_wizard, pioneer, certified, grandmaster)
+- [x] Interactive Badge Showcase component on Dashboard with tier styling and lock states
+- [x] Badge unlock celebration notification (LevelUpModal with gold confetti)
 
 ---
 

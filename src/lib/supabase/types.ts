@@ -20,6 +20,8 @@ export interface Database {
           email: string | null;
           display_name: string | null;
           avatar_url: string | null;
+          xp: number;
+          level: number;
           created_at: string;
           updated_at: string;
         };
@@ -28,6 +30,8 @@ export interface Database {
           email?: string | null;
           display_name?: string | null;
           avatar_url?: string | null;
+          xp?: number;
+          level?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -36,6 +40,8 @@ export interface Database {
           email?: string | null;
           display_name?: string | null;
           avatar_url?: string | null;
+          xp?: number;
+          level?: number;
           updated_at?: string;
         };
         Relationships: [];
@@ -372,6 +378,37 @@ export interface Database {
         Update: {
           id?: string;
           issued_at?: string;
+        };
+        Relationships: [];
+      };
+      user_badges: {
+        Row: {
+          id: string;
+          user_id: string;
+          badge_key: string;
+          badge_name: string;
+          badge_description: string;
+          icon: string;
+          tier: 'bronze' | 'silver' | 'gold' | 'obsidian';
+          unlocked_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          badge_key: string;
+          badge_name: string;
+          badge_description: string;
+          icon: string;
+          tier: 'bronze' | 'silver' | 'gold' | 'obsidian';
+          unlocked_at?: string;
+        };
+        Update: {
+          id?: string;
+          badge_key?: string;
+          badge_name?: string;
+          badge_description?: string;
+          icon?: string;
+          tier?: 'bronze' | 'silver' | 'gold' | 'obsidian';
         };
         Relationships: [];
       };

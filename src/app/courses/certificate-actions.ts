@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { createHash } from 'crypto';
 import { revalidatePath } from 'next/cache';
+import { awardUserXP, checkAndAwardBadge } from '@/app/gamification/actions';
 
 export interface CertificateResult {
   success: boolean;
@@ -114,6 +115,10 @@ export async function issueCertificate(courseId: string): Promise<CertificateRes
   if (insertErr || !cert) {
     return { success: false, error: insertErr?.message ?? 'Failed to issue certificate.' };
   }
+
+  // Award 100 XP and certified badge
+  await awardUserXP(100, 'certificate_issued');
+  await checkAndAwardBadge('certified');
 
   revalidatePath(`/courses/${courseId}`);
 

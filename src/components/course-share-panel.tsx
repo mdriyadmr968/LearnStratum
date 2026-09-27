@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Globe, Lock, Copy, CheckCheck, ExternalLink, Loader2, Share2 } from 'lucide-react';
 import { toggleCoursePublic } from '@/app/courses/sharing-actions';
+import { awardUserXP, checkAndAwardBadge } from '@/app/gamification/actions';
 
 interface CourseSharePanelProps {
   courseId: string;
@@ -39,6 +40,10 @@ export function CourseSharePanel({
     if (res.success) {
       setIsPublic(!!res.isPublic);
       if (res.slug) setSlug(res.slug);
+      if (nextState) {
+        checkAndAwardBadge('pioneer');
+        awardUserXP(50, 'course_shared');
+      }
     } else {
       setError(res.error || 'Failed to update visibility.');
     }
