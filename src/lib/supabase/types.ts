@@ -50,6 +50,8 @@ export interface Database {
           difficulty_level: DifficultyLevel;
           weekly_hours_allocated: number;
           status: CourseStatus;
+          is_public: boolean;
+          slug: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -62,6 +64,8 @@ export interface Database {
           difficulty_level: DifficultyLevel;
           weekly_hours_allocated?: number;
           status?: CourseStatus;
+          is_public?: boolean;
+          slug?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -74,6 +78,8 @@ export interface Database {
           difficulty_level?: DifficultyLevel;
           weekly_hours_allocated?: number;
           status?: CourseStatus;
+          is_public?: boolean;
+          slug?: string | null;
           updated_at?: string;
         };
         Relationships: [];

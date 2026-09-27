@@ -310,11 +310,11 @@ flowchart TD
 - [x] Support `System`, `Light`, and `Dark` modes
 
 #### Feature 5: Public Course Sharing & Forking
-- [ ] Add `is_public` boolean column and `slug` (unique, URL-safe) column to `courses` table
-- [ ] Public course gallery page (`/explore`) listing all public courses
-- [ ] Public course detail view (`/explore/[slug]`) accessible without login
-- [ ] "Fork to My Dashboard" button that deep-copies course + modules + lessons to the logged-in user's account
-- [ ] Toggle visibility control on course settings page
+- [x] Add `is_public` boolean column and `slug` (unique, URL-safe) column to `courses` table
+- [x] Public course gallery page (`/explore`) listing all public courses
+- [x] Public course detail view (`/explore/[slug]`) accessible without login
+- [x] "Fork to My Dashboard" button that deep-copies course + modules + lessons to the logged-in user's account
+- [x] Toggle visibility control on course settings page
 
 ---
 

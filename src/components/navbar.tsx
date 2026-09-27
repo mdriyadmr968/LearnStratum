@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { signOut } from '@/app/auth/actions';
-import { BookOpen, PlusCircle, LayoutDashboard, LogOut, User as UserIcon } from 'lucide-react';
+import { BookOpen, PlusCircle, LayoutDashboard, LogOut, User as UserIcon, Compass } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -45,24 +45,34 @@ export function Navbar() {
             </span>
           </Link>
 
-          {user && (
-            <nav className="hidden md:flex items-center gap-6">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-1.5 text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                Dashboard
-              </Link>
-              <Link
-                href="/courses/new"
-                className="flex items-center gap-1.5 text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition"
-              >
-                <PlusCircle className="w-4 h-4" />
-                New Course
-              </Link>
-            </nav>
-          )}
+          <nav className="hidden md:flex items-center gap-6">
+            <Link
+              href="/explore"
+              className="flex items-center gap-1.5 text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition"
+            >
+              <Compass className="w-4 h-4" />
+              Explore
+            </Link>
+
+            {user && (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-1.5 text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Dashboard
+                </Link>
+                <Link
+                  href="/courses/new"
+                  className="flex items-center gap-1.5 text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  New Course
+                </Link>
+              </>
+            )}
+          </nav>
         </div>
 
         <div className="flex items-center gap-3">

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import type { Database } from '@/lib/supabase/types';
 import { CertificatePanel } from '@/components/certificate-panel';
+import { CourseSharePanel } from '@/components/course-share-panel';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -186,6 +187,14 @@ export default async function CourseDetailPage({ params }: PageProps) {
             )}
           </div>
         </div>
+
+        {/* Course Visibility & Sharing Panel */}
+        <CourseSharePanel
+          courseId={course.id}
+          initialIsPublic={course.is_public ?? false}
+          initialSlug={course.slug ?? null}
+          isOwner={user?.id === course.user_id}
+        />
 
         {/* Certificate of Completion Panel */}
         <CertificatePanel
