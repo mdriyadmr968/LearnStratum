@@ -13,18 +13,20 @@ export async function generateEmbedding(text: string): Promise<number[] | null> 
     return null;
   }
 
-  try {
-    const response = await genai.models.embedContent({
-      model: 'text-embedding-004',
-      contents: text.slice(0, 4000),
-    });
+  const models = ['gemini-embedding-001', 'text-embedding-004'];
+  for (const model of models) {
+    try {
+      const response = await genai.models.embedContent({
+        model,
+        contents: text.slice(0, 4000),
+      });
 
-    if (response?.embeddings?.[0]?.values) {
-      return response.embeddings[0].values;
+      if (response?.embeddings?.[0]?.values) {
+        return response.embeddings[0].values;
+      }
+    } catch {
+      continue;
     }
-    return null;
-  } catch (error) {
-    console.warn('Embedding generation error (gracefully handled):', error);
-    return null;
   }
+  return null;
 }

@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   Zap,
 } from 'lucide-react';
+import { FadeIn } from '@/components/animations/motion-components';
 
 const SUGGESTED_TOPICS = [
   'Distributed Systems in Go',
@@ -106,8 +107,9 @@ export default function NewCoursePage() {
           />
         ) : (
           /* Wizard Form */
-          <div className="space-y-8">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-10 shadow-sm relative overflow-hidden">
+          <FadeIn direction="up">
+            <div className="space-y-8">
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-10 shadow-sm relative overflow-hidden">
               <div className="max-w-2xl">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 mb-4">
                   <Sparkles className="w-3.5 h-3.5" />
@@ -394,6 +396,7 @@ export default function NewCoursePage() {
               )}
             </div>
           </div>
+          </FadeIn>
         )}
       </main>
     </div>

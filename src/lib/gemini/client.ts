@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import { generateContentWithFallback } from './models';
 import {
   CurriculumSchema,
   type GeneratedCurriculum,
@@ -69,8 +70,7 @@ Return ONLY valid JSON matching this schema:
 `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+    const response = await generateContentWithFallback(ai, {
       contents: prompt,
       config: {
         responseMimeType: 'application/json',

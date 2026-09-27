@@ -27,7 +27,20 @@ export async function harvestLessonResources({
       .order('created_at', { ascending: true });
 
     if (existingResources && existingResources.length > 0) {
-      return existingResources;
+      // Filter out broken articles (e.g. YouTube scraped by Jina Reader)
+      const validArticles = existingResources.filter(
+        (r) =>
+          r.type === 'web_article' &&
+          !r.url.includes('youtube.com') &&
+          !r.url.includes('youtu.be') &&
+          !(r.summary_markdown && r.summary_markdown.includes('Target URL returned error 401'))
+      );
+      const validVideos = existingResources.filter((r) => r.type === 'youtube_video');
+
+      // If we have valid articles and videos, return immediately
+      if (validArticles.length > 0 && validVideos.length > 0) {
+        return [...validVideos, ...validArticles];
+      }
     }
   } catch (err) {
     console.warn('Error reading existing resources:', err);

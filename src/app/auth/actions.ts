@@ -88,7 +88,12 @@ export async function signUp(prevState: AuthState, formData: FormData): Promise<
   }
 
   // If user is auto-confirmed or session is active immediately
-  if (data.session) {
+  if (data.session && data.user) {
+    await supabase
+      .from('profiles')
+      .update({ ai_credits: 1000 })
+      .eq('id', data.user.id);
+
     revalidatePath('/', 'layout');
     redirect('/dashboard');
   }
@@ -150,7 +155,7 @@ export async function signOut() {
   redirect('/auth/login');
 }
 
-export async function signInWithOAuth(provider: 'github' | 'google') {
+export async function signInWithOAuth(provider: 'google' = 'google') {
   const headerList = await headers();
   const origin = headerList.get('origin') || '';
 

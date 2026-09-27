@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import { generateContentWithFallback } from './models';
 import { z } from 'zod';
 
 const FlashcardSchema = z.object({
@@ -63,8 +64,7 @@ Rules:
 
   try {
     const genai = new GoogleGenAI({ apiKey });
-    const response = await genai.models.generateContent({
-      model: 'gemini-2.5-flash',
+    const response = await generateContentWithFallback(genai, {
       contents: prompt,
       config: {
         responseMimeType: 'application/json',

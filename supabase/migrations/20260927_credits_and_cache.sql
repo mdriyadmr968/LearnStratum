@@ -4,23 +4,24 @@
 
 -- 1. Add ai_credits and plan to profiles
 ALTER TABLE profiles
-  ADD COLUMN IF NOT EXISTS ai_credits integer NOT NULL DEFAULT 50,
+  ADD COLUMN IF NOT EXISTS ai_credits integer NOT NULL DEFAULT 1000,
   ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'free';
+ALTER TABLE profiles ALTER COLUMN ai_credits SET DEFAULT 1000;
 
--- 2. Update the existing new-user trigger to grant 50 starter credits
+-- 2. Update the existing new-user trigger to grant 1000 starter credits
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name, avatar_url, ai_credits, plan)
+  INSERT INTO public.profiles (id, email, display_name, avatar_url, ai_credits, plan)
   VALUES (
     NEW.id,
     NEW.email,
-    NEW.raw_user_meta_data->>'full_name',
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, '@', 1)),
     NEW.raw_user_meta_data->>'avatar_url',
-    50,
+    1000,
     'free'
   )
   ON CONFLICT (id) DO NOTHING;

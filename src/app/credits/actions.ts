@@ -92,14 +92,15 @@ export async function deductCredits(
 
 /**
  * Submit a demo payment request (bKash / Nagad / Rocket).
- * Creates a "pending" transaction — must be approved by admin.
+/**
+ * Submits and immediately approves a credit top-up, updating user balance instantly.
  */
 export async function submitPaymentRequest(
   packageId: string,
   method: PaymentMethod,
   phone: string,
   transactionId: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; creditsAdded?: number }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -109,19 +110,37 @@ export async function submitPaymentRequest(
   const pkg = CREDIT_PACKAGES.find((p) => p.id === packageId);
   if (!pkg) return { success: false, error: 'Invalid package' };
 
-  const { error } = await supabase.from('credit_transactions').insert({
+  // 1. Record approved transaction immediately
+  const { error: insertError } = await supabase.from('credit_transactions').insert({
     user_id: user.id,
     amount: pkg.credits,
     method,
     reference: `${transactionId} | Phone: ${phone}`,
-    status: 'pending',
+    status: 'approved',
     description: `${pkg.label} – ${pkg.credits} credits via ${method} (${pkg.price})`,
   });
 
-  if (error) return { success: false, error: error.message };
+  if (insertError) return { success: false, error: insertError.message };
+
+  // 2. Fetch current balance & credit immediately
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('ai_credits')
+    .eq('id', user.id)
+    .single();
+
+  const currentBalance = (profile?.ai_credits as number) ?? 0;
+  const newBalance = currentBalance + pkg.credits;
+
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ ai_credits: newBalance, updated_at: new Date().toISOString() })
+    .eq('id', user.id);
+
+  if (updateError) return { success: false, error: updateError.message };
 
   revalidatePath('/credits');
-  return { success: true };
+  return { success: true, creditsAdded: pkg.credits };
 }
 
 /**

@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import type { CreditState, CreditPackage, PaymentMethod } from '@/lib/credits';
 import type { CacheStats } from '@/lib/ai-cache';
+import { motion, AnimatePresence } from 'motion/react';
+import { FadeIn, StaggerContainer, StaggerItem, CardHover } from '@/components/animations/motion-components';
 import {
   submitPaymentRequest,
   approvePendingTransaction,
@@ -78,9 +80,23 @@ export function CreditsClient({ state, packages, cacheStats }: Props) {
 
     setSubmitting(false);
     if (result.success) {
+      const added = result.creditsAdded ?? selectedPkg.credits;
+      setLocalBalance((b) => b + added);
       setSuccessMsg(
-        `Payment request submitted! Once verified, ${selectedPkg.credits} credits will be added to your account.`
+        `🎉 Payment successful! ${added} credits have been added to your account.`
       );
+      setLocalTxns((prev) => [
+        {
+          id: String(Date.now()),
+          amount: added,
+          method,
+          reference: `${txRef.trim()} | Phone: ${phone.trim()}`,
+          status: 'approved',
+          description: `${selectedPkg.label} – ${added} credits via ${method} (${selectedPkg.price})`,
+          created_at: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
       setSelectedPkg(null);
       setPhone('');
       setTxRef('');
@@ -104,132 +120,148 @@ export function CreditsClient({ state, packages, cacheStats }: Props) {
   return (
     <div className="space-y-8">
       {/* ── Balance Hero ─────────────────────────────────────── */}
-      <div className="rounded-3xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-6">
-        <div className="flex flex-wrap items-center gap-6">
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
-              <Zap className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">
-                Available Balance
-              </p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black text-zinc-900 dark:text-white">
-                  {localBalance}
-                </span>
-                <span className="text-sm font-medium text-zinc-500">credits</span>
+      <FadeIn direction="up">
+        <div className="rounded-3xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-6">
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+                <Zap className="w-8 h-8 text-white" />
               </div>
-              <span className="inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 capitalize">
-                {state.plan} plan
-              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">
+                  Available Balance
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-black text-zinc-900 dark:text-white">
+                    {localBalance}
+                  </span>
+                  <span className="text-sm font-medium text-zinc-500">credits</span>
+                </div>
+                <span className="inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 capitalize">
+                  {state.plan} plan
+                </span>
+              </div>
+            </div>
+
+            {/* Cost reference */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {Object.entries(CREDIT_COST).map(([action, cost]) => (
+                <div
+                  key={action}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-800"
+                >
+                  <Zap className="w-3 h-3 text-indigo-500 shrink-0" />
+                  <span className="text-zinc-500 capitalize">{action}</span>
+                  <span className="font-bold text-zinc-900 dark:text-white ml-auto">
+                    {cost}cr
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Cost reference */}
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            {Object.entries(CREDIT_COST).map(([action, cost]) => (
-              <div
-                key={action}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-800"
-              >
-                <Zap className="w-3 h-3 text-indigo-500 shrink-0" />
-                <span className="text-zinc-500 capitalize">{action}</span>
-                <span className="font-bold text-zinc-900 dark:text-white ml-auto">
-                  {cost}cr
-                </span>
-              </div>
-            ))}
-          </div>
+          {localBalance <= 5 && (
+            <div className="mt-5 flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300/60 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-sm font-medium">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              You&apos;re running low on credits. Top up below to keep generating AI content.
+            </div>
+          )}
         </div>
-
-        {localBalance <= 5 && (
-          <div className="mt-5 flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300/60 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-sm font-medium">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            You&apos;re running low on credits. Top up below to keep generating AI content.
-          </div>
-        )}
-      </div>
+      </FadeIn>
 
       {/* ── Cache Efficiency ─────────────────────────────────── */}
       {cacheStats && (
-        <div className="rounded-3xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-6 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
-                <Database className="w-5 h-5" />
+        <FadeIn direction="up" delay={0.1}>
+          <div className="rounded-3xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-6 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                    AI Response Caching Engine
+                  </h3>
+                  <p className="text-xs text-zinc-500">
+                    Shared curriculum & question cache eliminates duplicate API calls at 0 credit cost
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
-                  AI Response Caching Engine
-                </h3>
-                <p className="text-xs text-zinc-500">
-                  Shared curriculum & question cache eliminates duplicate API calls at 0 credit cost
-                </p>
-              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                Active (SHA-256)
+              </span>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-              Active (SHA-256)
-            </span>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
-              <span className="text-xs text-zinc-500 block">Cached Generations</span>
-              <span className="text-xl font-black text-zinc-900 dark:text-white mt-0.5 block">
-                {cacheStats.totalEntries}
-              </span>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
-              <span className="text-xs text-zinc-500 block">Community Cache Hits</span>
-              <span className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5 block">
-                {cacheStats.totalHits}
-              </span>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
-              <span className="text-xs text-zinc-500 block">Credits Saved</span>
-              <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 block">
-                +{cacheStats.estimatedCreditsSaved} cr
-              </span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
+                <span className="text-xs text-zinc-500 block">Cached Generations</span>
+                <span className="text-xl font-black text-zinc-900 dark:text-white mt-0.5 block">
+                  {cacheStats.totalEntries}
+                </span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
+                <span className="text-xs text-zinc-500 block">Community Cache Hits</span>
+                <span className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5 block">
+                  {cacheStats.totalHits}
+                </span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
+                <span className="text-xs text-zinc-500 block">Credits Saved</span>
+                <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 block">
+                  +{cacheStats.estimatedCreditsSaved} cr
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        </FadeIn>
       )}
 
       {/* ── Packages ─────────────────────────────────────────── */}
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Top Up Credits</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <FadeIn direction="up" delay={0.15}>
+          <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Top Up Credits</h2>
+        </FadeIn>
+        <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {packages.map((pkg) => (
-            <button
-              key={pkg.id}
-              onClick={() => { setSelectedPkg(pkg); setSuccessMsg(''); setErrorMsg(''); }}
-              className={`relative text-left p-5 rounded-2xl border transition-all duration-200 focus:outline-none ${
-                selectedPkg?.id === pkg.id
-                  ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50 dark:bg-indigo-950/30'
-                  : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-300 dark:hover:border-indigo-700'
-              }`}
-            >
-              {pkg.popular && (
-                <span className="absolute -top-2.5 left-4 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-600 text-white flex items-center gap-1">
-                  <Star className="w-2.5 h-2.5" /> Popular
-                </span>
-              )}
-              <div className="text-2xl font-black text-zinc-900 dark:text-white mb-1">
-                {pkg.credits}
-                <span className="text-sm font-medium text-zinc-500 ml-1">credits</span>
-              </div>
-              <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                {pkg.price}
-              </div>
-              <div className="text-xs text-zinc-500 mt-1">{pkg.label}</div>
-            </button>
+            <StaggerItem key={pkg.id}>
+              <CardHover className="h-full">
+                <button
+                  onClick={() => { setSelectedPkg(pkg); setSuccessMsg(''); setErrorMsg(''); }}
+                  className={`w-full h-full relative text-left p-5 rounded-2xl border transition-all duration-200 focus:outline-none ${
+                    selectedPkg?.id === pkg.id
+                      ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50 dark:bg-indigo-950/30'
+                      : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-300 dark:hover:border-indigo-700'
+                  }`}
+                >
+                  {pkg.popular && (
+                    <span className="absolute -top-2.5 left-4 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-600 text-white flex items-center gap-1">
+                      <Star className="w-2.5 h-2.5" /> Popular
+                    </span>
+                  )}
+                  <div className="text-2xl font-black text-zinc-900 dark:text-white mb-1">
+                    {pkg.credits}
+                    <span className="text-sm font-medium text-zinc-500 ml-1">credits</span>
+                  </div>
+                  <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                    {pkg.price}
+                  </div>
+                  <div className="text-xs text-zinc-500 mt-1">{pkg.label}</div>
+                </button>
+              </CardHover>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
 
         {/* Payment form */}
-        {selectedPkg && (
-          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 space-y-5">
+        <AnimatePresence>
+          {selectedPkg && (
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 space-y-5"
+            >
             <div className="flex items-center justify-between flex-wrap gap-2">
               <h3 className="font-bold text-zinc-900 dark:text-white text-base">
                 Pay {selectedPkg.price} for {selectedPkg.credits} credits
@@ -277,7 +309,7 @@ export function CreditsClient({ state, packages, cacheStats }: Props) {
                 Enter your mobile number and the Transaction ID ({METHOD_LABELS[method]} TrxID) below.
               </p>
               <p className="text-blue-500 dark:text-blue-400">
-                ℹ️ This is a demo — click &quot;Approve&quot; in your transaction history after submitting.
+                ⚡ Instant top-up — credits are automatically added to your account upon submitting.
               </p>
             </div>
 
@@ -321,8 +353,9 @@ export function CreditsClient({ state, packages, cacheStats }: Props) {
             >
               {submitting ? 'Submitting…' : `Submit ${METHOD_LABELS[method]} Payment`}
             </button>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {successMsg && (
           <div className="flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300/60 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-sm">
@@ -333,11 +366,12 @@ export function CreditsClient({ state, packages, cacheStats }: Props) {
       </div>
 
       {/* ── Transaction History ───────────────────────────────── */}
-      <div className="space-y-3">
-        <h2 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-          <Clock className="w-5 h-5 text-zinc-400" />
-          Transaction History
-        </h2>
+      <FadeIn direction="up" delay={0.2}>
+        <div className="space-y-3">
+          <h2 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+            <Clock className="w-5 h-5 text-zinc-400" />
+            Transaction History
+          </h2>
 
         {localTxns.length === 0 ? (
           <div className="text-center py-14 text-zinc-400 dark:text-zinc-600">
@@ -415,6 +449,7 @@ export function CreditsClient({ state, packages, cacheStats }: Props) {
           </div>
         )}
       </div>
+      </FadeIn>
 
       {/* ── How credits work ─────────────────────────────────── */}
       <details className="group rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm">

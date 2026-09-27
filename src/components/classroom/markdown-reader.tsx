@@ -23,6 +23,16 @@ export function MarkdownReader({ articles }: MarkdownReaderProps) {
 
   const currentArticle = articles[selectedIndex];
 
+  const sanitizedMarkdown = React.useMemo(() => {
+    if (!currentArticle?.summary_markdown) return '*No content available.*';
+    return currentArticle.summary_markdown
+      .replace(/Warning:\s*Target URL returned error[^\n]*/gi, '')
+      .replace(/^Markdown Content:\s*Back/gim, '')
+      .replace(/^Skip navigation/gim, '')
+      .replace(/^Search with your voice/gim, '')
+      .trim();
+  }, [currentArticle?.summary_markdown]);
+
   return (
     <div className="space-y-4">
       {/* Article Switcher Tabs */}
@@ -67,8 +77,40 @@ export function MarkdownReader({ articles }: MarkdownReaderProps) {
         </h2>
 
         <div className="text-zinc-700 dark:text-zinc-300 text-sm leading-relaxed space-y-4 [&>h1]:text-lg [&>h1]:font-bold [&>h1]:mt-4 [&>h2]:text-base [&>h2]:font-bold [&>h2]:mt-3 [&>h3]:text-sm [&>h3]:font-bold [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-1 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-1 [&>code]:bg-zinc-100 [&>code]:dark:bg-zinc-800 [&>code]:px-1.5 [&>code]:py-0.5 [&>code]:rounded [&>code]:font-mono [&>code]:text-xs [&>pre]:bg-zinc-900 [&>pre]:text-zinc-100 [&>pre]:p-4 [&>pre]:rounded-xl [&>pre]:overflow-x-auto [&>blockquote]:border-l-4 [&>blockquote]:border-indigo-500 [&>blockquote]:pl-4 [&>blockquote]:italic">
-          <ReactMarkdown>
-            {currentArticle.summary_markdown || '*No content available.*'}
+          <ReactMarkdown
+            components={{
+              img: ({ node, src, alt, ...props }) => {
+                if (!src || typeof src !== 'string' || src.startsWith('/') || src.includes('error') || src.includes('401')) {
+                  return null;
+                }
+                return (
+                  <img
+                    src={src}
+                    alt={alt || ''}
+                    className="rounded-xl max-w-full my-3 border border-zinc-200 dark:border-zinc-800 shadow-sm"
+                    loading="lazy"
+                    onError={(e) => {
+                      // Hide broken scraped images gracefully
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                    {...props}
+                  />
+                );
+              },
+              a: ({ node, href, children, ...props }) => (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-500 font-medium"
+                  {...props}
+                >
+                  {children}
+                </a>
+              ),
+            }}
+          >
+            {sanitizedMarkdown}
           </ReactMarkdown>
         </div>
       </div>

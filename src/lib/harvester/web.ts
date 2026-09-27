@@ -23,10 +23,17 @@ export async function fetchWebDocumentation(
         },
         body: JSON.stringify({
           api_key: tavilyKey,
-          query: `${topic} ${query} documentation tutorial`,
+          query: `${topic} ${query} documentation guide tutorial`,
           search_depth: 'basic',
           include_answer: false,
-          max_results: 2,
+          max_results: 4,
+          exclude_domains: [
+            'youtube.com',
+            'youtu.be',
+            'vimeo.com',
+            'tiktok.com',
+            'dailymotion.com',
+          ],
         }),
         next: { revalidate: 86400 },
       });
@@ -34,11 +41,22 @@ export async function fetchWebDocumentation(
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data.results)) {
-          candidateUrls = data.results.map((r: { title?: string; url: string; content?: string }) => ({
-            title: r.title || query,
-            url: r.url,
-            snippet: r.content || '',
-          }));
+          candidateUrls = data.results
+            .filter((r: { url?: string }) => {
+              if (!r.url) return false;
+              const lower = r.url.toLowerCase();
+              return (
+                !lower.includes('youtube.com') &&
+                !lower.includes('youtu.be') &&
+                !lower.includes('vimeo.com') &&
+                !lower.includes('tiktok.com')
+              );
+            })
+            .map((r: { title?: string; url: string; content?: string }) => ({
+              title: r.title || query,
+              url: r.url,
+              snippet: r.content || '',
+            }));
         }
       }
     } catch (err) {
@@ -63,32 +81,52 @@ export async function fetchWebDocumentation(
 
         if (jinaRes.ok) {
           const rawMarkdown = await jinaRes.text();
-          // Trim to avoid exceeding token or DB sizes
-          const cleanMarkdown = rawMarkdown.length > 3000
-            ? rawMarkdown.substring(0, 3000) + '\n\n*(Content truncated for focused study. Visit original URL for complete details.)*'
-            : rawMarkdown;
 
+          // Reject scraping error pages or blocked responses
+          const isInvalidScrape =
+            rawMarkdown.includes('Warning: Target URL returned error') ||
+            rawMarkdown.includes('error 401') ||
+            rawMarkdown.includes('error 403') ||
+            rawMarkdown.includes('Skip navigation') ||
+            rawMarkdown.includes('Just a moment...') ||
+            rawMarkdown.trim().length < 80;
+
+          if (!isInvalidScrape) {
+            // Clean up any stray relative image references or warnings
+            const sanitized = rawMarkdown
+              .replace(/!\[([^\]]*)\]\((?:\/[^)]*|data:[^)]*)\)/gi, '') // remove broken relative images
+              .replace(/Warning:\s*Target URL returned error[^\n]*/gi, '');
+
+            const cleanMarkdown = sanitized.length > 3500
+              ? sanitized.substring(0, 3500) + '\n\n*(Content truncated for focused study. Visit original URL for complete details.)*'
+              : sanitized;
+
+            articles.push({
+              title: candidate.title,
+              url: candidate.url,
+              authorOrSource: new URL(candidate.url).hostname.replace('www.', ''),
+              contentMarkdown: cleanMarkdown,
+            });
+            continue;
+          }
+        }
+
+        // Fallback to snippet if Jina failed or was blocked
+        if (candidate.snippet && candidate.snippet.length > 60 && !candidate.snippet.includes('401 Unauthorized')) {
           articles.push({
             title: candidate.title,
             url: candidate.url,
             authorOrSource: new URL(candidate.url).hostname.replace('www.', ''),
-            contentMarkdown: cleanMarkdown,
-          });
-        } else if (candidate.snippet) {
-          articles.push({
-            title: candidate.title,
-            url: candidate.url,
-            authorOrSource: new URL(candidate.url).hostname.replace('www.', ''),
-            contentMarkdown: candidate.snippet,
+            contentMarkdown: `## ${candidate.title}\n\n${candidate.snippet}\n\n[Read complete article on ${new URL(candidate.url).hostname}](${candidate.url})`,
           });
         }
       } catch {
-        if (candidate.snippet) {
+        if (candidate.snippet && candidate.snippet.length > 60) {
           articles.push({
             title: candidate.title,
             url: candidate.url,
             authorOrSource: new URL(candidate.url).hostname.replace('www.', ''),
-            contentMarkdown: candidate.snippet,
+            contentMarkdown: `## ${candidate.title}\n\n${candidate.snippet}\n\n[Read complete article on ${new URL(candidate.url).hostname}](${candidate.url})`,
           });
         }
       }

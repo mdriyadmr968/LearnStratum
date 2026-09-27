@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { GoogleGenAI } from '@google/genai';
+import { generateContentStreamWithFallback } from '@/lib/gemini/models';
 import { checkRateLimit } from '@/lib/ratelimit';
 
 export const runtime = 'nodejs';
@@ -121,8 +122,7 @@ Answer the student's question below based on the lesson context above.`;
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const result = await genai.models.generateContentStream({
-          model: 'gemini-2.5-flash',
+        const result = await generateContentStreamWithFallback(genai, {
           contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\n**Student question:** ${question}` }] }],
           config: {
             temperature: 0.7,
@@ -137,8 +137,12 @@ Answer the student's question below based on the lesson context above.`;
           }
         }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'AI generation failed';
-        controller.enqueue(encoder.encode(`\n\n[Error: ${msg}]`));
+        console.error('[AI Tutor Stream Error]:', err);
+        controller.enqueue(
+          encoder.encode(
+            "\n\n*I'm experiencing high traffic right now and couldn't complete this response. Please try asking your question again in a moment.*"
+          )
+        );
       } finally {
         controller.close();
       }
