@@ -7,26 +7,27 @@ import type { RankInfo } from '@/lib/gamification';
 
 interface XPBadgeProps {
   rankInfo: RankInfo | null;
+  className?: string;
 }
 
-export function XPBadge({ rankInfo }: XPBadgeProps) {
+export function XPBadge({ rankInfo, className }: XPBadgeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
   if (!rankInfo) return null;
 
   return (
     <div
-      className="relative hidden sm:block"
+      className={`relative ${className ?? 'hidden sm:block'}`}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
       <Link
         href="/dashboard"
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-xs font-semibold hover:border-amber-400 transition"
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-xs font-semibold hover:border-amber-400 transition whitespace-nowrap shrink-0"
       >
-        <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-        <span>Lvl {rankInfo.level}</span>
-        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-normal">
+        <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
+        <span className="whitespace-nowrap">Lvl {rankInfo.level}</span>
+        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-normal whitespace-nowrap">
           ({rankInfo.currentXP} XP)
         </span>
       </Link>
