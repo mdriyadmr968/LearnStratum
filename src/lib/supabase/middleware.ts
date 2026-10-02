@@ -44,6 +44,13 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // If an OAuth code arrives on any route other than /auth/callback (e.g. root '/' due to default Site URL), forward to /auth/callback
+  if (request.nextUrl.searchParams.has('code') && pathname !== '/auth/callback') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth/callback';
+    return NextResponse.redirect(url);
+  }
+
   // Protect authenticated routes
   const isProtectedRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/courses');
   const isAuthRoute = pathname === '/auth/login' || pathname === '/auth/sign-up' || pathname === '/auth/forgot-password';

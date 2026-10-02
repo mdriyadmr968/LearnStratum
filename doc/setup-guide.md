@@ -96,12 +96,24 @@ Open your Supabase Project Dashboard $\rightarrow$ **SQL Editor**, and run the S
 
 ## 5. Supabase Auth Configuration
 
-1. In Supabase Dashboard, go to **Authentication $\rightarrow$ URL Configuration**:
-   - Set **Site URL** to: `http://localhost:3000` (or your production Vercel domain).
-   - Add **Redirect URL**: `http://localhost:3000/auth/callback` and `https://your-domain.vercel.app/auth/callback`.
-2. Under **Authentication $\rightarrow$ Providers**:
-   - **Email**: Enabled (Confirm email can be toggled on/off depending on your preference).
-   - **Google OAuth**: Optional. Enter Google Client ID & Secret from Google Cloud Console if enabling Google login.
+1. In Supabase Dashboard, navigate to **Authentication $\rightarrow$ URL Configuration**:
+   - **Site URL**:
+     - Set to your primary production URL: `https://learnstratum.vercel.app` (or `http://localhost:3000` when running strictly locally).
+   - **Redirect URLs** (Add all of the following):
+     - `https://learnstratum.vercel.app/**`
+     - `https://learnstratum.vercel.app/auth/callback`
+     - `http://localhost:3000/**`
+     - `http://localhost:3000/auth/callback`
+
+> [!WARNING]
+> **Why is my Google Sign-in redirecting to `http://localhost:3000/?code=...` instead of Vercel?**
+> Supabase Auth validates the OAuth `redirectTo` target against its **Redirect URLs allowlist**. If your Vercel domain (`https://learnstratum.vercel.app/**`) is **not** explicitly added under **Redirect URLs**, or if your **Site URL** is left as `http://localhost:3000`, Supabase will reject the production redirect and fallback to `http://localhost:3000`. Adding your Vercel URL patterns and setting the **Site URL** to `https://learnstratum.vercel.app` resolves this immediately.
+
+2. In **Google Cloud Console** (APIs & Services $\rightarrow$ Credentials $\rightarrow$ OAuth 2.0 Client IDs):
+   - Under **Authorized redirect URIs**, ensure you have added your Supabase project callback URL:
+     `https://<your-supabase-project-ref>.supabase.co/auth/v1/callback`
+3. Under Supabase Dashboard **Authentication $\rightarrow$ Providers $\rightarrow$ Google**:
+   - Enable Google provider, and paste your Google Client ID and Client Secret.
 
 ---
 

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { getAppUrl } from '@/lib/utils';
 import { z } from 'zod';
 
 const AuthSchema = z.object({
@@ -112,7 +113,7 @@ export async function requestPasswordReset(prevState: AuthState, formData: FormD
   }
 
   const headerList = await headers();
-  const origin = headerList.get('origin') || '';
+  const origin = getAppUrl(headerList);
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -155,9 +156,9 @@ export async function signOut() {
   redirect('/auth/login');
 }
 
-export async function signInWithOAuth(provider: 'google' = 'google') {
+export async function signInWithOAuth(provider: 'google' = 'google', clientOrigin?: string) {
   const headerList = await headers();
-  const origin = headerList.get('origin') || '';
+  const origin = clientOrigin || getAppUrl(headerList);
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
